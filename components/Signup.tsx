@@ -42,12 +42,12 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex flex-col md:flex-row items-center justify-center min-h-screen bg-gradient-to-br bg-slate-200">
       <motion.div
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
-        className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md md:w-1/2 relative z-10"
+        className="bg-slate-100 p-8 rounded-xl shadow-lg w-full max-w-md md:w-1/2 relative z-10"
       >
         <div className="mb-8 text-center">
           <motion.h1
