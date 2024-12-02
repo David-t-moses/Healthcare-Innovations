@@ -11,15 +11,20 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
 
   // Redirect unauthenticated users to sign-in
-  if (!session && req.nextUrl.pathname.startsWith("/dashboard")) {
+  if (
+    !session &&
+    (req.nextUrl.pathname.startsWith("/dashboard") ||
+      req.nextUrl.pathname === "/")
+  ) {
     return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 
-  // Redirect authenticated users to dashboard if they try to access auth pages
+  // Redirect authenticated users to dashboard if they try to access auth pages or root
   if (
     session &&
     (req.nextUrl.pathname.startsWith("/sign-in") ||
-      req.nextUrl.pathname.startsWith("/sign-up"))
+      req.nextUrl.pathname.startsWith("/sign-up") ||
+      req.nextUrl.pathname === "/")
   ) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
@@ -28,5 +33,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/sign-in", "/sign-up"],
+  matcher: ["/", "/dashboard/:path*", "/sign-in", "/sign-up"],
 };
