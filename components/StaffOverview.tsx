@@ -1,0 +1,39 @@
+"use client";
+
+export default function StaffOverview() {
+  const staff = [
+    { id: 1, name: "Dr. Smith", role: "Doctor", status: "active" },
+    { id: 2, name: "Nurse Johnson", role: "Nurse", status: "break" },
+    { id: 3, name: "Dr. Williams", role: "Doctor", status: "active" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {staff.map((member) => (
+        <div
+          key={member.id}
+          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              {member.name.charAt(0)}
+            </div>
+            <div>
+              <p className="font-medium">{member.name}</p>
+              <p className="text-sm text-gray-500">{member.role}</p>
+            </div>
+          </div>
+          <span
+            className={`px-2 py-1 rounded-full text-sm ${
+              member.status === "active"
+                ? "bg-green-100 text-green-800"
+                : "bg-yellow-100 text-yellow-800"
+            }`}
+          >
+            {member.status}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}

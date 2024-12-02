@@ -1,19 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { SignupForm } from "./SignupForm";
-import { DecorativeSection } from "./DecorativeSection";
-import { FormData } from "@/types";
+import { SignupForm } from "@/components/SignupForm";
+import { DecorativeSection } from "@/components/DecorativeSection";
+import { signUp } from "@/lib/actions/auth";
 
-const Signup = () => {
+interface FormData {
+  fullName: string;
+  email: string;
+  password: string;
+  role: "PATIENT" | "STAFF";
+}
+
+export default function SignUp() {
+  const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState<FormData>({
-    firstName: "",
-    surname: "",
+    fullName: "",
     email: "",
     password: "",
-    role: "patient",
-    note: "",
+    role: "PATIENT",
   });
 
   const handleChange = (
@@ -22,23 +28,23 @@ const Signup = () => {
     >
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch("/api/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+    startTransition(async () => {
+      const result = await signUp(formData);
+      if (result.success) {
+        window.location.href = "/dashboard";
+      } else if (result.error) {
+        alert(result.error);
+        console.error(result.error);
+      }
     });
-
-    const data = await res.json();
-    if (data.success) {
-      alert("User registered successfully!");
-    } else {
-      alert(data.message || "Something went wrong");
-    }
   };
 
   return (
@@ -64,12 +70,23 @@ const Signup = () => {
           formData={formData}
           handleChange={handleChange}
           handleSubmit={handleSubmit}
+          isLoading={isPending}
         />
+
+        <div className="mt-6 text-center">
+          <p className="text-gray-600">
+            Already have an account?{" "}
+            <a
+              href="/sign-in"
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Login
+            </a>
+          </p>
+        </div>
       </motion.div>
 
       <DecorativeSection />
     </div>
   );
-};
-
-export default Signup;
+}

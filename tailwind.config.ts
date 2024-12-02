@@ -9,8 +9,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        sidebarBg: "#f4f4f4", // Custom color for sidebar
+        primary: "#007bff", // Custom primary color
+        textMain: "#333",
       },
     },
   },

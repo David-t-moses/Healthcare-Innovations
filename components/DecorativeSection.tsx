@@ -57,7 +57,7 @@ export const DecorativeSection = () => (
         transition={{ delay: 0.5 }}
         className="text-lg opacity-90"
       >
-        "Transforming healthcare delivery through digital excellence"
+        Transforming healthcare delivery through digital excellence
       </motion.p>
 
       <motion.ul

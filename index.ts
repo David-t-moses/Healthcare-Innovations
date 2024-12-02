@@ -2,6 +2,5 @@ export interface FormData {
   fullName: string;
   email: string;
   password: string;
-  role: string;
-  note?: string;
+  role: "PATIENT" | "STAFF";
 }

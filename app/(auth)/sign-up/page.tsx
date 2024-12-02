@@ -1,9 +1,12 @@
 import Signup from "@/components/Signup";
+import React from "react";
 
-export default function Home() {
+const page = () => {
   return (
     <div>
       <Signup />
     </div>
   );
-}
+};
+
+export default page;
