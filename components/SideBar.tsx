@@ -1,6 +1,6 @@
 "use client";
 
-import { signOut } from "@/lib/actions/auth";
+import { signOut } from "@/lib/actions/user.actions";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";

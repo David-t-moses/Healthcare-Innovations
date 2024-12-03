@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
 import { SignupForm } from "@/components/SignupForm";
 import { DecorativeSection } from "@/components/DecorativeSection";
-import { signUp } from "@/lib/actions/auth";
+import { signUp } from "@/lib/actions/user.actions";
 
 interface FormData {
   fullName: string;

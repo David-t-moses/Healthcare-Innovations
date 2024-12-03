@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { getCurrentUser } from "@/lib/actions/user.actions";
 import {
   AiOutlinePlus,
   AiOutlineBell,
@@ -64,33 +65,18 @@ const navigationItems = [
 
 export default function Dashboard({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [userData, setUserData] = useState<{ fullName: string } | null>(null);
+  const [firstName, setFirstName] = useState("");
   const pathname = usePathname();
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch("/api/auth/me", {
-          credentials: "include",
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setUserData(data);
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
+    const fetchUser = async () => {
+      const user = await getCurrentUser();
+      if (user?.fullName) {
+        setFirstName(user.fullName.split(" ")[0]);
       }
     };
-
-    fetchUserData();
+    fetchUser();
   }, []);
-
-  const firstName = useMemo(() => {
-    if (userData?.fullName) {
-      return userData.fullName.split(" ")[0];
-    }
-    return "";
-  }, [userData]);
 
   const currentPageTitle = useMemo(() => {
     const currentRoute = navigationItems.find((item) => item.path === pathname);
@@ -98,7 +84,7 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   return (
-    <div className="flex bg-gray-100">
+    <div className="flex">
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         navigationItems={navigationItems}
@@ -116,7 +102,7 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 bg-gray-200 lg:ml-72">
+      <main className="flex-1 lg:ml-72">
         <header className="bg-gray-100/90 shadow-md backdrop-blur-sm sticky top-0 z-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-4 space-y-4 sm:space-y-0">
             <div className="flex items-center space-x-4 w-full sm:w-auto">
@@ -178,13 +164,14 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
                 >
                   <AiOutlineMessage className="w-5 h-5 text-gray-600" />
                 </motion.button>
+
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center space-x-2 bg-blue-600 text-white rounded-lg px-4 py-2 cursor-pointer"
                 >
                   <AiOutlineUser className="w-5 h-5" />
                   <span className="font-medium hidden sm:inline">
-                    {firstName || "G. Setzu"}
+                    {firstName || "Guest"}
                   </span>
                 </motion.div>
               </div>

@@ -1,5 +1,5 @@
 "use client";
-
+import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 ChartJS.register(
   CategoryScale,
@@ -23,12 +24,42 @@ ChartJS.register(
 );
 
 export default function FinancialWidget() {
+  const [financialData, setFinancialData] = useState([]);
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    const fetchFinancialData = async () => {
+      const { data } = await supabase
+        .from("financial_records")
+        .select("*")
+        .order("date", { ascending: true });
+      setFinancialData(data);
+    };
+
+    const channel = supabase
+      .channel("financial_records")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "financial_records" },
+        (payload) => {
+          fetchFinancialData();
+        }
+      )
+      .subscribe();
+
+    fetchFinancialData();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const data = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    labels: financialData.map((record) => format(new Date(record.date), "MMM")),
     datasets: [
       {
         label: "Revenue",
-        data: [12000, 19000, 15000, 25000, 22000, 30000],
+        data: financialData.map((record) => record.amount),
         borderColor: "rgb(59, 130, 246)",
         tension: 0.4,
       },
@@ -40,7 +71,12 @@ export default function FinancialWidget() {
       <div className="flex justify-between mb-4">
         <div>
           <h4 className="text-lg font-semibold">Total Revenue</h4>
-          <p className="text-3xl font-bold text-blue-600">$123,456</p>
+          <p className="text-3xl font-bold text-blue-600">
+            $
+            {financialData
+              .reduce((acc, curr) => acc + curr.amount, 0)
+              .toLocaleString()}
+          </p>
         </div>
         <select className="border rounded-lg px-2">
           <option>Last 6 months</option>

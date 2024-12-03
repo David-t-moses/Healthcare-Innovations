@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Calendar from "@/components/Calender";
-// import { useAuth } from "@/hooks/useAuth";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import FinancialWidget from "@/components/FinancialWidget";
 import StaffOverview from "@/components/StaffOverview";
 import StockWidget from "@/components/StockWidget";
+import { WidgetMenu } from "@/components/WidgetMenu";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
   DragDropContext,
   Droppable,
@@ -15,7 +16,15 @@ import {
   DropResult,
 } from "react-beautiful-dnd";
 
-const defaultLayout = [
+interface Widget {
+  id: string;
+  title: string;
+  size: "sm" | "md" | "lg";
+  isMinimized?: boolean;
+  isMaximized?: boolean;
+}
+
+const defaultLayout: Widget[] = [
   { id: "calendar", title: "Calendar", size: "lg" },
   { id: "financial", title: "Financial Overview", size: "md" },
   { id: "staff", title: "Staff On Duty", size: "md" },
@@ -23,86 +32,124 @@ const defaultLayout = [
 ];
 
 export default function DashboardContent() {
-  const [widgets, setWidgets] = useState(defaultLayout);
-  // const { isLoading, user } = useAuth();
+  const [widgets, setWidgets] = useState(
+    defaultLayout.map((widget) => ({
+      ...widget,
+      isMinimized: false,
+      isMaximized: false,
+    }))
+  );
+  const [isClient, setIsClient] = useState(false);
+  const supabase = createClientComponentClient();
 
-  // if (isLoading) {
-  //   return <LoadingSpinner message="Loading your dashboard..." />;
-  // }
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
-
     const items = Array.from(widgets);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-
     setWidgets(items);
   };
 
+  const handleRefresh = async (widgetId: string) => {
+    switch (widgetId) {
+      case "calendar":
+        await supabase.from("appointments").select("*");
+        break;
+      case "financial":
+        await supabase.from("financial_records").select("*");
+        break;
+      case "staff":
+        await supabase.from("staff_status").select("*");
+        break;
+      case "stock":
+        await supabase.from("stock_items").select("*");
+        break;
+    }
+  };
+
+  const handleMinimize = (widgetId: string) => {
+    setWidgets((currentWidgets) =>
+      currentWidgets.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, isMinimized: !widget.isMinimized, isMaximized: false }
+          : widget
+      )
+    );
+  };
+
+  const handleMaximize = (widgetId: string) => {
+    setWidgets((currentWidgets) =>
+      currentWidgets.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, isMaximized: !widget.isMaximized, isMinimized: false }
+          : { ...widget, isMaximized: false }
+      )
+    );
+  };
+
+  if (!isClient) {
+    return <LoadingSpinner message="Loading your dashboard..." />;
+  }
+
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <Droppable droppableId="dashboard" direction="vertical">
+      <Droppable droppableId="dashboard" direction="vertical" type="widget">
         {(provided) => (
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4"
+            className="min-h-screen bg-gradient-to-br p-4 overflow-y-auto"
           >
-            {widgets.map((widget, index) => (
-              <Draggable key={widget.id} draggableId={widget.id} index={index}>
-                {(provided, snapshot) => (
-                  <motion.div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`
-                      bg-gray-100 rounded-xl shadow-lg overflow-hidden
-                      ${
-                        widget.size === "lg"
-                          ? "md:col-span-2 lg:col-span-3"
-                          : ""
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {widgets.map((widget, index) => (
+                <Draggable
+                  key={widget.id}
+                  draggableId={widget.id}
+                  index={index}
+                >
+                  {(provided, snapshot) => (
+                    <motion.div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className={`relative bg-white rounded-xl shadow-md transition-transform transform ${
+                        snapshot.isDragging ? "scale-105 shadow-lg" : ""
+                      } ${widget.id === "calendar" ? "col-span-full" : ""} ${
+                        widget.isMaximized ? "col-span-full row-span-full" : ""
                       }
-                      ${
-                        widget.size === "md"
-                          ? "md:col-span-1 lg:col-span-2"
-                          : ""
-                      }
-                      ${widget.size === "sm" ? "col-span-1" : ""}
-                    `}
-                    style={{
-                      ...provided.draggableProps.style,
-                      transform: snapshot.isDragging
-                        ? provided.draggableProps.style?.transform
-                        : "none",
-                    }}
-                  >
-                    <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white flex justify-between items-center">
-                      <h3 className="font-semibold">{widget.title}</h3>
-                      <button className="p-1 hover:bg-blue-400 rounded">
-                        <svg
-                          className="w-4 h-4"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
+                      ${widget.isMinimized ? "h-16" : ""}`}
+                    >
+                      <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-t-xl flex justify-between items-center">
+                        <h3 className="font-medium text-lg">{widget.title}</h3>
+                        <WidgetMenu
+                          widgetId={widget.id}
+                          onRefresh={() => handleRefresh(widget.id)}
+                          onMinimize={() => handleMinimize(widget.id)}
+                          onMaximize={() => handleMaximize(widget.id)}
+                        />
+                      </div>
+                      {!widget.isMinimized && (
+                        <motion.div
+                          className="p-4"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
                         >
-                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="p-4">
-                      {widget.id === "calendar" && <Calendar />}
-                      {widget.id === "financial" && <FinancialWidget />}
-                      {widget.id === "staff" && <StaffOverview />}
-                      {widget.id === "stock" && <StockWidget />}
-                    </div>
-                  </motion.div>
-                )}
-              </Draggable>
-            ))}
-            {provided.placeholder}
+                          {widget.id === "calendar" && <Calendar />}
+                          {widget.id === "financial" && <FinancialWidget />}
+                          {widget.id === "staff" && <StaffOverview />}
+                          {widget.id === "stock" && <StockWidget />}
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
           </div>
         )}
       </Droppable>

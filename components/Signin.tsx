@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DecorativeSection } from "./DecorativeSection";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { signIn } from "@/lib/actions/auth";
+import { signIn } from "@/lib/actions/user.actions";
 
 interface LoginData {
   email: string;

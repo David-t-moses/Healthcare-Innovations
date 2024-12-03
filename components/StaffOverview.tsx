@@ -1,11 +1,34 @@
 "use client";
+import { useEffect, useState } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function StaffOverview() {
-  const staff = [
-    { id: 1, name: "Dr. Smith", role: "Doctor", status: "active" },
-    { id: 2, name: "Nurse Johnson", role: "Nurse", status: "break" },
-    { id: 3, name: "Dr. Williams", role: "Doctor", status: "active" },
-  ];
+  const [staff, setStaff] = useState([]);
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    const fetchStaffStatus = async () => {
+      const { data } = await supabase.from("staff_status").select("*");
+      setStaff(data);
+    };
+
+    const channel = supabase
+      .channel("staff_status")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "staff_status" },
+        (payload) => {
+          fetchStaffStatus();
+        }
+      )
+      .subscribe();
+
+    fetchStaffStatus();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <div className="space-y-4">

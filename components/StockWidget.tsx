@@ -1,11 +1,34 @@
 "use client";
+import { useEffect, useState } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function StockWidget() {
-  const stock = [
-    { id: 1, name: "Paracetamol", quantity: 500, status: "good" },
-    { id: 2, name: "Antibiotics", quantity: 100, status: "low" },
-    { id: 3, name: "Bandages", quantity: 200, status: "good" },
-  ];
+  const [stock, setStock] = useState([]);
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    const fetchStock = async () => {
+      const { data } = await supabase.from("stock_items").select("*");
+      setStock(data);
+    };
+
+    const channel = supabase
+      .channel("stock_items")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "stock_items" },
+        (payload) => {
+          fetchStock();
+        }
+      )
+      .subscribe();
+
+    fetchStock();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <div className="space-y-4">
