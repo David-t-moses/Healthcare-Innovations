@@ -25,10 +25,8 @@ const Sidebar = ({
 
   const handleSignOut = async () => {
     setIsLoading(true);
-    const result = await signOut();
-    if (result.success) {
-      router.push("/sign-in");
-    }
+    await signOut();
+    router.push("/sign-in");
     setIsLoading(false);
   };
 
