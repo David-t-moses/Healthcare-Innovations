@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { DecorativeSection } from "./DecorativeSection";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { signIn } from "@/lib/actions/user.actions";
+import { toast } from "sonner";
 
 interface LoginData {
   email: string;
@@ -31,15 +32,20 @@ const Signin = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    startTransition(async () => {
+    try {
       const result = await signIn(formData);
+
       if (result.success) {
-        router.push("/dashboard");
+        router.push(result.redirect || "/dashboard");
+        router.refresh();
       } else {
-        // Handle error if needed
+        toast.error(result.error || "Failed to sign in");
         setIsLoading(false);
       }
-    });
+    } catch (error) {
+      toast.error("An error occurred during sign in");
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -47,22 +47,46 @@ export default function PatientAnalytics() {
 
   const supabase = createClientComponentClient();
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, []);
-
   const fetchAnalytics = async () => {
-    const { data } = await supabase.rpc("get_patient_analytics");
-    if (data) {
-      setAnalytics((prevState) => ({
-        ...prevState,
-        ...data,
+    const { data: patientCount } = await supabase
+      .from("Patient")
+      .select("*", { count: "exact" });
+
+    const { data: activeCount } = await supabase
+      .from("Patient")
+      .select("*", { count: "exact" })
+      .eq("status", "active");
+
+    if (patientCount !== null && activeCount !== null) {
+      setAnalytics((prev) => ({
+        ...prev,
+        totalPatients: patientCount.length,
+        activePatients: activeCount.length,
       }));
     }
   };
 
+  useEffect(() => {
+    const channel = supabase
+      .channel("patient_analytics")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "Patient" },
+        () => {
+          fetchAnalytics();
+        }
+      )
+      .subscribe();
+
+    fetchAnalytics();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>

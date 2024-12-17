@@ -1,8 +1,15 @@
+"use client";
+
 import { motion } from "framer-motion";
-import { FormData } from "@/types";
+import Button from "./Button";
 
 interface SignupFormProps {
-  formData: FormData;
+  formData: {
+    fullName: string;
+    email: string;
+    password: string;
+    role: "PATIENT" | "STAFF";
+  };
   handleChange: (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -12,108 +19,165 @@ interface SignupFormProps {
   isLoading: boolean;
 }
 
-export const SignupForm = ({
+export function SignupForm({
   formData,
   handleChange,
   handleSubmit,
   isLoading,
-}: SignupFormProps) => (
-  <form onSubmit={handleSubmit} className="space-y-6">
-    <div className="space-y-4">
+}: SignupFormProps) {
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-gray-700 font-medium mb-2">
+        <label
+          htmlFor="fullName"
+          className="block text-sm font-medium text-gray-700"
+        >
           Full Name
         </label>
         <input
           type="text"
+          id="fullName"
           name="fullName"
-          placeholder="eg. John Doe"
           value={formData.fullName}
           onChange={handleChange}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           required
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
         />
       </div>
 
       <div>
-        <label className="block text-gray-700 font-medium mb-2">Email</label>
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Email
+        </label>
         <input
           type="email"
+          id="email"
           name="email"
-          placeholder="j.appleseed@email.com"
           value={formData.email}
           onChange={handleChange}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           required
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
         />
       </div>
 
       <div>
-        <label className="block text-gray-700 font-medium mb-2">Password</label>
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Password
+        </label>
         <input
           type="password"
+          id="password"
           name="password"
-          placeholder="********"
           value={formData.password}
           onChange={handleChange}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           required
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
         />
       </div>
 
       <div>
-        <label className="block text-gray-700 font-medium mb-2">Role</label>
+        <label
+          htmlFor="role"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Role
+        </label>
         <select
+          id="role"
           name="role"
           value={formData.role}
           onChange={handleChange}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          required
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
         >
-          <option value="patient">Patient</option>
-          <option value="staff">Staff</option>
+          <option value="PATIENT">Patient</option>
+          <option value="STAFF">Staff</option>
         </select>
       </div>
 
-      <motion.button
-        whileHover={{ scale: isLoading ? 1 : 1.02 }}
-        whileTap={{ scale: isLoading ? 1 : 0.98 }}
-        type="submit"
-        disabled={isLoading}
-        className={`w-full py-3 rounded-lg transition-all duration-200 font-medium flex items-center justify-center
-          ${
-            isLoading
-              ? "bg-blue-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-          } text-white`}
-      >
-        {isLoading ? (
-          <>
-            <svg
-              className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
+      {formData.role === "PATIENT" && (
+        <>
+          <div>
+            <label
+              htmlFor="phone"
+              className="block text-sm font-medium text-gray-700"
             >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            Creating Account...
-          </>
-        ) : (
-          "Create Account"
-        )}
-      </motion.button>
-    </div>
-  </form>
-);
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="dateOfBirth"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Date of Birth
+            </label>
+            <input
+              type="date"
+              id="dateOfBirth"
+              name="dateOfBirth"
+              value={formData.dateOfBirth}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="insurance"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Insurance
+            </label>
+            <input
+              type="text"
+              id="insurance"
+              name="insurance"
+              value={formData.insurance}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="emergencyContact"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Emergency Contact
+            </label>
+            <input
+              type="text"
+              id="emergencyContact"
+              name="emergencyContact"
+              value={formData.emergencyContact}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            />
+          </div>
+        </>
+      )}
+
+      <Button
+        isLoading={isLoading}
+        main_text="Sign Up"
+        loading_text="Signing up..."
+      />
+    </form>
+  );
+}

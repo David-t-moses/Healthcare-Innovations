@@ -1,23 +1,41 @@
+"use server";
+
 import { cookies } from "next/headers";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Database } from "@/types/supabase";
+import prisma from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 
 export async function getCurrentUser() {
-  const supabase = createServerComponentClient<Database>({ cookies });
+  const cookieStore = await cookies();
+  try {
+    const session = await getSession();
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    if (!session?.userId) {
+      return null;
+    }
 
-  if (!session) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      cookieStore.delete("session");
+      return null;
+    }
+
+    return {
+      ...user,
+      role: user.role as "PATIENT" | "STAFF",
+    };
+  } catch (error) {
+    console.error("Auth error:", error);
     return null;
   }
-
-  const { data: user } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", session.user.id)
-    .single();
-
-  return user;
 }

@@ -1,22 +1,28 @@
-import { cookies } from "next/headers";
 import AppointmentScheduler from "@/components/AppointmentScheduler";
+import { getCurrentUser } from "@/lib/auth";
 
-interface PageProps {
+export default async function SchedulePage({
+  searchParams,
+}: {
   searchParams: { patientId?: string };
-}
+}) {
+  const user = await getCurrentUser();
 
-async function getData() {
-  const cookieStore = cookies();
-  const authToken = cookieStore.get("sb-zfxigyrendxuhjlyyyyq-auth-token");
-  return { authToken: authToken?.value };
-}
+  if (!user) {
+    return <div>Please login to schedule appointments</div>;
+  }
 
-export default async function SchedulePage({ searchParams }: PageProps) {
-  const data = await getData();
+  if (!searchParams.patientId) {
+    return <div>Missing patient ID - Please select a patient first</div>;
+  }
 
   return (
-    <div className="container mx-auto py-6">
-      <AppointmentScheduler patientId={searchParams.patientId} />
+    <div className="max-w-md mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Schedule Appointment</h1>
+      <AppointmentScheduler
+        patientId={searchParams.patientId}
+        staffId={user.id}
+      />
     </div>
   );
 }

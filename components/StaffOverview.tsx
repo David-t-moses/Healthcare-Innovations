@@ -8,7 +8,8 @@ export default function StaffOverview() {
 
   useEffect(() => {
     const fetchStaffStatus = async () => {
-      const { data } = await supabase.from("staff_status").select("*");
+      const { data } = await supabase.from("StaffStatus").select("*");
+
       setStaff(data);
     };
 

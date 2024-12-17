@@ -11,6 +11,10 @@ interface FormData {
   email: string;
   password: string;
   role: "PATIENT" | "STAFF";
+  phone?: string;
+  dateOfBirth?: string;
+  insurance?: string;
+  emergencyContact?: string;
 }
 
 export default function SignUp() {
@@ -20,6 +24,10 @@ export default function SignUp() {
     email: "",
     password: "",
     role: "PATIENT",
+    phone: "",
+    dateOfBirth: "",
+    insurance: "",
+    emergencyContact: "",
   });
 
   const handleChange = (

@@ -8,7 +8,8 @@ export default function StockWidget() {
 
   useEffect(() => {
     const fetchStock = async () => {
-      const { data } = await supabase.from("stock_items").select("*");
+      const { data } = await supabase.from("StockItem").select("*");
+
       setStock(data);
     };
 

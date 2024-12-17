@@ -8,18 +8,173 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  fullName  String
-  email     String   @unique
-  password  String
-  role      Role     @default(PATIENT)
-  note      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 enum Role {
   PATIENT
   STAFF
 }
+
+model User {
+  id              String           @id @default(cuid())
+  fullName        String
+  email           String          @unique
+  password        String
+  role            Role           @default(PATIENT)
+  note            String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  appointments    Appointment[]
+  medicalHistories MedicalHistory[]
+  prescriptions   Prescription[]
+  paymentHistories PaymentHistory[]
+  notifications   Notification[]
+  orders StockOrder[]
+}
+
+model Patient {
+  id                String           @id @default(uuid())
+  name              String
+  email             String?          @unique
+  phone             String?
+  dateOfBirth       DateTime?
+  insurance         String?
+  emergencyContact  String?
+  status            String           @default("active")
+  createdAt         DateTime         @default(now())
+  lastVisit         DateTime?
+  medicalHistories  MedicalHistory[]
+  prescriptions     Prescription[]
+  paymentHistories  PaymentHistory[]
+  appointments      Appointment[]
+}
+
+model MedicalHistory {
+  id          String   @id @default(uuid())
+  patientId   String
+  diagnosis   String
+  notes       String?
+  date        DateTime @default(now())
+  staffId     String
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  user        User     @relation(fields: [staffId], references: [id])
+}
+
+model Prescription {
+  id           String   @id @default(uuid())
+  patientId    String
+  medication   String
+  dosage       String
+  instructions String?
+  date         DateTime @default(now())
+  staffId      String
+  patient      Patient  @relation(fields: [patientId], references: [id])
+  user         User     @relation(fields: [staffId], references: [id])
+}
+
+model PaymentHistory {
+  id            String   @id @default(uuid())
+  patientId     String
+  userId        String
+  amount        Decimal
+  date          DateTime @default(now())
+  status        String   @default("pending")
+  paymentMethod String?
+  patient       Patient  @relation(fields: [patientId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Appointment {
+  id          String   @id @default(cuid())
+  title       String
+  startTime   DateTime
+  endTime     DateTime
+  status      AppointmentStatus @default(PENDING)
+  notes       String?
+  patientId   String
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+enum AppointmentStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  CANCELLED
+}
+
+model FinancialRecord {
+  id     String   @id @default(cuid())
+  amount Decimal
+  date   DateTime
+  type   String
+}
+
+model StaffStatus {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  role        String
+  status      String
+  lastUpdated DateTime @default(now())
+}
+
+
+model StockItem {
+  id              String @id @default(cuid())
+  name            String
+  quantity        Int
+  status          String
+  minimumQuantity Int    @default(10) 
+  reorderQuantity Int    @default(50) 
+  vendorId        String 
+  vendor          Vendor @relation(fields: [vendorId], references: [id])
+  orders StockOrder[]
+}
+
+model Vendor {
+  id          String      @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  address     String?
+  stockItems  StockItem[]
+  orders StockOrder[]
+}
+
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum NotificationType {
+  APPOINTMENT_REQUEST
+  APPOINTMENT_RESPONSE
+  GENERAL
+  STOCK_LOW
+}
+
+model StockOrder {
+  id          String   @id @default(cuid())
+  stockItemId String
+  quantity    Int
+  status      String   
+  vendorId    String
+  userId      String
+  createdAt   DateTime @default(now())
+  
+  stockItem   StockItem @relation(fields: [stockItemId], references: [id])
+  vendor      Vendor    @relation(fields: [vendorId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+

@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
   AiOutlinePlus,
   AiOutlineBell,
@@ -15,10 +15,15 @@ import {
   AiOutlineDollarCircle,
   AiOutlineSetting,
   AiOutlineInbox,
+  AiOutlineMedicineBox,
+  AiOutlineHistory,
 } from "react-icons/ai";
 import Sidebar from "./SideBar";
+import NotificationDropdown from "./NotificationDropdown";
+import { getCurrentUser } from "@/lib/auth";
+import { useNotifications } from "./NotificationContext";
 
-const navigationItems = [
+const staffNavigationItems = [
   {
     label: "Dashboard",
     description: "General Overview",
@@ -63,34 +68,84 @@ const navigationItems = [
   },
 ];
 
-export default function Dashboard({ children }: { children: React.ReactNode }) {
+const patientNavigationItems = [
+  {
+    label: "Dashboard",
+    description: "Your Overview",
+    path: "/dashboard",
+    icon: AiOutlineDashboard,
+  },
+  {
+    label: "My Appointments",
+    description: "Schedule and History",
+    path: "/appointments",
+    icon: AiOutlineCalendar,
+  },
+  {
+    label: "Prescriptions",
+    description: "Your Medications",
+    path: "/prescriptions",
+    icon: AiOutlineMedicineBox,
+  },
+  {
+    label: "Medical History",
+    description: "Your Records",
+    path: "/medical-history",
+    icon: AiOutlineHistory,
+  },
+  {
+    label: "Messages",
+    description: "Contact Staff",
+    path: "/messages",
+    icon: AiOutlineMessage,
+  },
+];
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [firstName, setFirstName] = useState("");
+  const [userRole, setUserRole] = useState<"PATIENT" | "STAFF" | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
   const pathname = usePathname();
+  const supabase = createClientComponentClient();
+  const { unreadCount, notifications } = useNotifications();
+
+  console.log("Current notifications:", notifications);
+  console.log("Unread count:", unreadCount);
 
   useEffect(() => {
     const fetchUser = async () => {
       const user = await getCurrentUser();
       if (user?.fullName) {
         setFirstName(user.fullName.split(" ")[0]);
+        setUserRole(user.role);
       }
     };
     fetchUser();
   }, []);
 
+  const navigationItems = useMemo(() => {
+    return userRole === "PATIENT"
+      ? patientNavigationItems
+      : staffNavigationItems;
+  }, [userRole]);
+
   const currentPageTitle = useMemo(() => {
     const currentRoute = navigationItems.find((item) => item.path === pathname);
     return currentRoute?.label || "Dashboard";
-  }, [pathname]);
+  }, [pathname, navigationItems]);
 
   return (
-    <div className="flex">
+    <div className="flex w-full">
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         navigationItems={navigationItems}
       />
 
-      {/* Mobile Overlay */}
       {isSidebarOpen && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -101,10 +156,10 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      {/* Main Content */}
       <main className="flex-1 lg:ml-72">
-        <header className="bg-gray-100/90 shadow-md backdrop-blur-sm sticky top-0 z-10">
+        <header className="bg-gray-100 shadow-md sticky top-0 z-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-4 space-y-4 sm:space-y-0">
+            {/* Header content */}
             <div className="flex items-center space-x-4 w-full sm:w-auto">
               <button
                 className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"
@@ -132,13 +187,15 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
               <div className="flex items-center space-x-2 order-2 sm:order-1">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
-                >
-                  <AiOutlinePlus className="w-5 h-5" />
-                </motion.button>
+                {userRole === "STAFF" && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
+                  >
+                    <AiOutlinePlus className="w-5 h-5" />
+                  </motion.button>
+                )}
 
                 <div className="relative hidden md:block">
                   <input
@@ -150,13 +207,28 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
               </div>
 
               <div className="flex items-center justify-end space-x-3 order-1 sm:order-2">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
-                >
-                  <AiOutlineBell className="w-5 h-5 text-gray-600" />
-                </motion.button>
+                <div className="relative">
+                  <motion.button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                  >
+                    <AiOutlineBell className="w-5 h-5 text-gray-600" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </motion.button>
+                  {showNotifications && (
+                    <NotificationDropdown
+                      notifications={notifications}
+                      onClose={() => setShowNotifications(false)}
+                    />
+                  )}
+                </div>
+
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -171,7 +243,7 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
                 >
                   <AiOutlineUser className="w-5 h-5" />
                   <span className="font-medium hidden sm:inline">
-                    {firstName || "Guest"}
+                    {firstName}
                   </span>
                 </motion.div>
               </div>

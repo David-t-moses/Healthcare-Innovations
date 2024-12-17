@@ -12,10 +12,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface AddPatientModalProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface PatientFormData {
+  id?: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  dateOfBirth: string | null;
+  insurance: string | null;
+  emergencyContact: string | null;
+  status: string;
 }
 
 export default function AddPatientModal({
@@ -23,13 +35,13 @@ export default function AddPatientModal({
   onClose,
 }: AddPatientModalProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<PatientFormData>({
     name: "",
     email: "",
     phone: "",
-    date_of_birth: "",
+    dateOfBirth: "",
     insurance: "",
-    emergency_contact: "",
+    emergencyContact: "",
     status: "active",
   });
 
@@ -39,24 +51,53 @@ export default function AddPatientModal({
     e.preventDefault();
     setIsLoading(true);
 
-    const { data, error } = await supabase
-      .from("patients")
-      .insert([formData])
-      .select();
+    try {
+      // Create patient data with UUID
+      const patientData = {
+        id: crypto.randomUUID(),
+        name: formData.name,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        dateOfBirth: formData.dateOfBirth
+          ? new Date(formData.dateOfBirth).toISOString()
+          : null,
+        insurance: formData.insurance || null,
+        emergencyContact: formData.emergencyContact || null,
+        status: formData.status,
+      };
 
-    setIsLoading(false);
+      const { error } = await supabase
+        .from("Patient")
+        .insert([patientData])
+        .select();
 
-    if (!error && data) {
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // Success handling
+      toast.success("Patient added successfully!");
+
+      // Reset form
       setFormData({
         name: "",
         email: "",
         phone: "",
-        date_of_birth: "",
+        dateOfBirth: "",
         insurance: "",
-        emergency_contact: "",
+        emergencyContact: "",
         status: "active",
       });
+
+      // Close modal
       onClose();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to add patient";
+      console.error("Error adding patient:", errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,58 +125,51 @@ export default function AddPatientModal({
               <Input
                 id="email"
                 type="email"
-                value={formData.email}
+                value={formData.email || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                required
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="phone">Phone</Label>
               <Input
                 id="phone"
-                value={formData.phone}
+                value={formData.phone || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, phone: e.target.value })
                 }
-                required
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="date_of_birth">Date of Birth</Label>
+              <Label htmlFor="dateOfBirth">Date of Birth</Label>
               <Input
-                id="date_of_birth"
+                id="dateOfBirth"
                 type="date"
-                value={formData.date_of_birth}
+                value={formData.dateOfBirth || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, date_of_birth: e.target.value })
+                  setFormData({ ...formData, dateOfBirth: e.target.value })
                 }
-                required
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="insurance">Insurance Details</Label>
               <Input
                 id="insurance"
-                value={formData.insurance}
+                value={formData.insurance || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, insurance: e.target.value })
                 }
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="emergency_contact">Emergency Contact</Label>
+              <Label htmlFor="emergencyContact">Emergency Contact</Label>
               <Input
-                id="emergency_contact"
-                value={formData.emergency_contact}
+                id="emergencyContact"
+                value={formData.emergencyContact || ""}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    emergency_contact: e.target.value,
-                  })
+                  setFormData({ ...formData, emergencyContact: e.target.value })
                 }
-                required
               />
             </div>
           </div>

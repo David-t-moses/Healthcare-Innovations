@@ -1,25 +1,24 @@
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getSession } from "@/lib/session";
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const session = await getSession();
 
-  const protectedRoutes = [
-    "/dashboard",
-    "/patients",
+  // Get user role from session
+  const userRole = session?.role;
+
+  const staffOnlyRoutes = ["/staff", "/finances", "/settings", "/stock"];
+  const patientRoutes = [
     "/appointments",
-    "/staff",
-    "/finances",
-    "/settings",
-    "/stock",
+    "/prescriptions",
+    "/medical-history",
+    "/messages",
   ];
+  const protectedRoutes = [...staffOnlyRoutes, ...patientRoutes, "/dashboard"];
 
-  // Redirect from root to dashboard if authenticated
+  // Root redirect
   if (req.nextUrl.pathname === "/") {
     if (session) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -27,12 +26,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 
-  // Redirect authenticated users trying to access auth pages
+  // Auth pages protection
   if (session && req.nextUrl.pathname.startsWith("/sign-")) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  // Redirect unauthenticated users trying to access protected routes
+  // Protected routes authentication check
   if (
     !session &&
     protectedRoutes.some((route) => req.nextUrl.pathname.startsWith(route))
@@ -42,20 +41,14 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  // Role-based access control
+  if (session && userRole === "PATIENT") {
+    if (
+      staffOnlyRoutes.some((route) => req.nextUrl.pathname.startsWith(route))
+    ) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+  }
+
   return res;
 }
-
-export const config = {
-  matcher: [
-    "/",
-    "/sign-in/:path*",
-    "/sign-up/:path*",
-    "/dashboard/:path*",
-    "/patients/:path*",
-    "/appointments/:path*",
-    "/staff/:path*",
-    "/finances/:path*",
-    "/settings/:path*",
-    "/stock/:path*",
-  ],
-};
