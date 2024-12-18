@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
 export async function getCurrentUser() {
+  const cookieStore = await cookies();
   try {
     const session = await getSession();
 
@@ -25,7 +26,7 @@ export async function getCurrentUser() {
     });
 
     if (!user) {
-      cookies().delete("session");
+      cookieStore.delete("session");
       return null;
     }
 

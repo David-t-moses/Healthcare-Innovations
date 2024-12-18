@@ -21,7 +21,9 @@ export async function createSession(userId: string) {
 
 export async function getSession() {
   const cookieStore = cookies();
-  const token = await cookieStore.get("session")?.value;
+  const sessionCookie = await cookieStore.get("session");
+  const token = sessionCookie?.value;
+
   if (!token) return null;
 
   try {

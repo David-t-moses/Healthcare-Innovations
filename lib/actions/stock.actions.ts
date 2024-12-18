@@ -83,34 +83,20 @@ export async function updateStockItem(id: string, data: any) {
   });
 
   if (updatedItem.quantity <= updatedItem.minimumQuantity && user) {
-    // const notification = await prisma.notification.create({
-    //   data: {
-    //     title: "Low Stock Alert",
-    //     message: `${updatedItem.name} is running low (${updatedItem.quantity} remaining)`,
-    //     type: "STOCK_LOW",
-    //     userId: user.id,
-    //   },
-    // });
-
-    // await pusherServer.trigger(
-    //   `user-${user.id}`,
-    //   "new-notification",
-    //   notification
-    // );
-
     const notification = await prisma.notification.create({
       data: {
-        userId: staffId, // You'll need to specify which staff gets notifications
         title: "Low Stock Alert",
-        message: `${updatedItem.name} is running low (${stockItem.quantity} remaining)`,
+        message: `${updatedItem.name} is running low (${updatedItem.quantity} remaining)`,
         type: "STOCK_LOW",
+        userId: user.id,
       },
     });
 
-    await pusherServer.trigger("staff-notifications", "new-notification", {
-      type: "STOCK_LOW",
-      notification,
-    });
+    await pusherServer.trigger(
+      `user-${user.id}`,
+      "new-notification",
+      notification
+    );
   }
 
   return updatedItem;
