@@ -2,12 +2,34 @@
 
 import prisma from "@/lib/prisma";
 import { pusherServer } from "@/lib/pusher";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { Resend } from "resend";
 import { format } from "date-fns";
+import { getCurrentUser } from "@/lib/auth";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+async function notifyAllStaff(title: string, message: string, type: string) {
+  const staffUsers = await prisma.user.findMany({
+    where: { role: "STAFF" },
+  });
+
+  for (const staff of staffUsers) {
+    const notification = await prisma.notification.create({
+      data: {
+        userId: staff.id,
+        title,
+        message,
+        type,
+      },
+    });
+
+    await pusherServer.trigger(
+      `user-${staff.id}`,
+      "new-notification",
+      notification
+    );
+  }
+}
 
 export async function createStockItem(data: {
   name: string;
@@ -21,9 +43,12 @@ export async function createStockItem(data: {
     data,
   });
 
-  // Check if stock is low immediately after creation
   if (stockItem.quantity <= stockItem.minimumQuantity) {
-    await createLowStockNotification(stockItem);
+    await notifyAllStaff(
+      "Low Stock Alert",
+      `${stockItem.name} is running low (${stockItem.quantity} remaining)`,
+      "STOCK_LOW"
+    );
   }
 
   return stockItem;
@@ -37,24 +62,6 @@ export async function getStockItems() {
   });
 }
 
-async function createLowStockNotification(stockItem: any) {
-  const notification = await prisma.notification.create({
-    data: {
-      userId: "STAFF_ID", // You'll need to specify which staff gets notifications
-      title: "Low Stock Alert",
-      message: `${stockItem.name} is running low (${stockItem.quantity} remaining)`,
-      type: "STOCK_LOW",
-    },
-  });
-
-  await pusherServer.trigger("staff-notifications", "new-notification", {
-    type: "STOCK_LOW",
-    stockItem,
-  });
-
-  return notification;
-}
-
 export async function deleteStockItem(id: string) {
   return await prisma.stockItem.delete({
     where: { id },
@@ -62,18 +69,6 @@ export async function deleteStockItem(id: string) {
 }
 
 export async function updateStockItem(id: string, data: any) {
-  const supabase = createServerComponentClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const staffId = session?.user?.id;
-
-  const user = await prisma.user.findFirst({
-    where: {
-      email: session?.user?.email,
-    },
-  });
-
   const updatedItem = await prisma.stockItem.update({
     where: { id },
     data,
@@ -82,20 +77,11 @@ export async function updateStockItem(id: string, data: any) {
     },
   });
 
-  if (updatedItem.quantity <= updatedItem.minimumQuantity && user) {
-    const notification = await prisma.notification.create({
-      data: {
-        title: "Low Stock Alert",
-        message: `${updatedItem.name} is running low (${updatedItem.quantity} remaining)`,
-        type: "STOCK_LOW",
-        userId: user.id,
-      },
-    });
-
-    await pusherServer.trigger(
-      `user-${user.id}`,
-      "new-notification",
-      notification
+  if (updatedItem.quantity <= updatedItem.minimumQuantity) {
+    await notifyAllStaff(
+      "Low Stock Alert",
+      `${updatedItem.name} is running low (${updatedItem.quantity} remaining)`,
+      "STOCK_LOW"
     );
   }
 
@@ -103,22 +89,13 @@ export async function updateStockItem(id: string, data: any) {
 }
 
 export async function reorderStock(stockItemId: string) {
-  const supabase = createServerComponentClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = await prisma.user.findFirst({
-    where: {
-      email: session?.user?.email,
-    },
-  });
+  const user = await getCurrentUser();
 
   const stockItem = await prisma.stockItem.findUnique({
     where: { id: stockItemId },
     include: { vendor: true },
   });
 
-  // Create order record
   const order = await prisma.stockOrder.create({
     data: {
       stockItemId,
@@ -129,25 +106,15 @@ export async function reorderStock(stockItemId: string) {
     },
   });
 
-  const reorderNotification = await prisma.notification.create({
-    data: {
-      title: "Stock Reorder Placed",
-      message: `Reorder placed for ${stockItem?.name} (${stockItem?.reorderQuantity} units)`,
-      type: "GENERAL",
-      userId: user?.id,
-    },
-  });
-
-  console.log("Triggering reorder notification:", reorderNotification);
-  await pusherServer.trigger(
-    `user-${user?.id}`,
-    "new-notification",
-    reorderNotification
+  await notifyAllStaff(
+    "Stock Reorder Placed",
+    `Reorder placed for ${stockItem.name} (${stockItem.reorderQuantity} units)`,
+    "GENERAL"
   );
-  // Send email to vendor
+
   await resend.emails.send({
     from: process.env.SENDER_EMAIL!,
-    to: stockItem?.vendor.email!,
+    to: stockItem.vendor.email!,
     subject: "Stock Reorder Request",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
@@ -158,7 +125,7 @@ export async function reorderStock(stockItemId: string) {
             <h2 style="color: #1e3a8a; margin: 0 0 8px 0;">Order Details</h2>
             <p style="color: #64748b; margin: 0;">Please review and process this order request.</p>
           </div>
-  
+
           <div style="margin-bottom: 24px;">
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
@@ -188,9 +155,9 @@ export async function reorderStock(stockItemId: string) {
               </tr>
             </table>
           </div>
-  
+
           <div style="text-align: center;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/orders/${order.id}" 
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/orders/${order.id}"
                style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
               View Order Details
             </a>
