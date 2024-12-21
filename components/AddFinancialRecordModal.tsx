@@ -8,9 +8,21 @@ import { createFinancialRecord } from "@/lib/actions/sales.actions";
 export default function AddFinancialRecordModal({
   isOpen,
   onClose,
-  onSuccess,
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [salesData, setSalesData] = useState({
+    payments: [],
+    financialRecords: [],
+  });
+
+  const fetchSalesData = async () => {
+    const { success, data, error } = await getSalesData();
+    if (success) {
+      setSalesData(data);
+    } else {
+      toast.error(error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +38,7 @@ export default function AddFinancialRecordModal({
 
       if (result.success) {
         toast.success("Financial record added successfully");
-        onSuccess();
+        fetchSalesData();
         onClose();
       } else {
         toast.error(result.error);

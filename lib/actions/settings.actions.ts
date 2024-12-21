@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { hash } from "bcryptjs";
+import { hash, compare } from "bcryptjs";
 
 type ProfileUpdateData = {
   fullName: string;

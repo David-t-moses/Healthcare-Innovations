@@ -3,7 +3,7 @@
 import { signOut } from "@/lib/actions/user.actions";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AiOutlineLogout } from "react-icons/ai";
 
@@ -20,14 +20,11 @@ const Sidebar = ({
   }[];
 }) => {
   const pathname = usePathname();
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     setIsLoading(true);
-    await signOut();
-    router.push("/sign-in");
-    setIsLoading(false);
+    signOut();
   };
 
   return (

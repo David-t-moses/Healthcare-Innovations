@@ -10,10 +10,22 @@ const supabase = createClientComponentClient();
 export default function AddPaymentModal({
   isOpen,
   onClose,
-  onSuccess,
   patients,
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [salesData, setSalesData] = useState({
+    payments: [],
+    financialRecords: [],
+  });
+
+  const fetchSalesData = async () => {
+    const { success, data, error } = await getSalesData();
+    if (success) {
+      setSalesData(data);
+    } else {
+      toast.error(error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,7 +48,7 @@ export default function AddPaymentModal({
 
       if (result.success) {
         toast.success("Payment recorded successfully");
-        onSuccess();
+        fetchSalesData();
         onClose();
       } else {
         toast.error(result.error);

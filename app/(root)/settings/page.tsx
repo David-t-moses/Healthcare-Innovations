@@ -120,20 +120,28 @@ export default function SettingsPage() {
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const newPassword = formData.get("newPassword");
+    const confirmPassword = formData.get("confirmPassword");
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
 
     const result = await updatePassword(session?.user?.id, {
       currentPassword: formData.get("currentPassword"),
-      newPassword: formData.get("newPassword"),
+      newPassword: newPassword,
     });
 
     if (result.success) {
       toast.success("Password updated successfully");
       e.target.reset();
     } else {
-      toast.error(result.error);
+      toast.error(result.error || "Failed to update password");
     }
   };
 

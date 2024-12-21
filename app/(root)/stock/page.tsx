@@ -270,9 +270,7 @@ export default function StockPage() {
         isOpen={isStockModalOpen}
         onClose={() => {
           setStockModalOpen(false);
-          fetchData();
         }}
-        vendors={vendors}
       />
     </div>
   );

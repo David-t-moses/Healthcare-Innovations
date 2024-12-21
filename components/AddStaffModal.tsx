@@ -5,8 +5,9 @@ import { useState } from "react";
 import { addStaffMember } from "@/lib/actions/staff.actions";
 import { toast } from "sonner";
 
-export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
+export default function AddStaffModal({ isOpen, onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [staffList, setStaffList] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,13 +24,26 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
 
       if (result.success) {
         toast.success("Staff member added successfully");
-        onSuccess();
+        fetchStaffData();
         onClose();
       } else {
         toast.error(result.error);
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const fetchStaffData = async () => {
+    try {
+      const { success, data, error } = await getStaffList();
+      if (success) {
+        setStaffList(data);
+      } else {
+        toast.error(error);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 

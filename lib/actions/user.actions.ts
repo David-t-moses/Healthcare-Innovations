@@ -2,9 +2,8 @@
 
 import { hash, compare } from "bcryptjs";
 import prisma from "@/lib/prisma";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createSession, destroySession } from "@/lib/session"; // We'll need to create this
+import { createSession, destroySession } from "@/lib/session";
 
 export async function signUp(formData: {
   fullName: string;
@@ -96,12 +95,6 @@ export async function signIn(formData: { email: string; password: string }) {
 }
 
 export async function signOut() {
-  try {
-    await destroySession();
-    redirect("/sign-in");
-  } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : "Something went wrong",
-    };
-  }
+  await destroySession();
+  redirect("/sign-in");
 }

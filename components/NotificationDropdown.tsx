@@ -2,7 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { markNotificationAsRead } from "@/lib/actions/notification.actions";
+import {
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+} from "@/lib/actions/notification.actions";
 import { motion } from "framer-motion";
 import { Bell } from "lucide-react";
 
@@ -28,6 +31,14 @@ export default function NotificationDropdown({ notifications, onClose }) {
       router.push("/stock");
     }
 
+    if (notification.type === "PRESCRIPTIONS") {
+      router.push("/prescriptions");
+    }
+
+    if (notification.type === "MEDICAL_RECORDS") {
+      router.push("/medical-records");
+    }
+
     if (
       notification.type === "APPOINTMENT_REQUEST" ||
       notification.type === "APPOINTMENT_RESPONSE"
@@ -38,6 +49,10 @@ export default function NotificationDropdown({ notifications, onClose }) {
     onClose();
   };
 
+  const handleMarkAllAsRead = async () => {
+    await markAllNotificationsAsRead(notifications[0]?.userId);
+  };
+
   return (
     <motion.div
       ref={dropdownRef}
@@ -46,8 +61,16 @@ export default function NotificationDropdown({ notifications, onClose }) {
       exit={{ opacity: 0, y: -20 }}
       className="absolute right-0 sm:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-white rounded-xl shadow-2xl z-50 border border-gray-100 overflow-hidden transform -translate-x-1/2 left-1/2 sm:transform-none sm:left-auto"
     >
-      <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+      <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white flex justify-between items-center">
         <h3 className="font-semibold text-lg">Notifications</h3>
+        {notifications.some((n) => !n.read) && (
+          <button
+            onClick={handleMarkAllAsRead}
+            className="text-sm bg-white/20 hover:bg-white/30 px-2 py-1 rounded-md transition-colors"
+          >
+            Mark all as read
+          </button>
+        )}
       </div>
 
       <div

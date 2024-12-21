@@ -5,6 +5,8 @@ import { SupabaseProvider } from "@/components/SupabaseProvider";
 import { Toaster } from "sonner";
 import { NotificationProvider } from "@/components/NotificationContext";
 import { getCurrentUser } from "@/lib/auth";
+// import { checkDailyMedications } from "@/lib/actions/prescription.actions";
+import { useEffect } from "react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -31,6 +33,20 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getCurrentUser();
+
+  // useEffect(() => {
+  //   const checkMedications = async () => {
+  //     const now = new Date();
+  //     if (now.getHours() === 9) {
+  //       await checkDailyMedications();
+  //     }
+  //   };
+
+  //   const interval = setInterval(checkMedications, 1000 * 60 * 60 * 24);
+  //   checkMedications();
+
+  //   return () => clearInterval(interval);
+  // }, []);
 
   return (
     <html lang="en">

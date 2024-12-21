@@ -2,8 +2,6 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { usePathname } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
   AiOutlinePlus,
   AiOutlineBell,
@@ -22,6 +20,14 @@ import Sidebar from "./SideBar";
 import NotificationDropdown from "./NotificationDropdown";
 import { getCurrentUser } from "@/lib/auth";
 import { useNotifications } from "./NotificationContext";
+import AddPatientModal from "./AddPatientModal";
+import AddPrescriptionModal from "./AddPrescriptionModal";
+import AddMedicalRecordModal from "./AddMedicalRecordModal";
+import AddStaffModal from "./AddStaffModal";
+import AddStockItemModal from "./AddStockItemModal";
+import AddFinancialRecordModal from "./AddFinancialRecordModal";
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
+import { SearchContext } from "./SearchContext";
 
 const staffNavigationItems = [
   {
@@ -55,16 +61,28 @@ const staffNavigationItems = [
     icon: AiOutlineDollarCircle,
   },
   {
-    label: "Settings",
-    description: "Clinic Settings",
-    path: "/settings",
-    icon: AiOutlineSetting,
-  },
-  {
     label: "Stock",
     description: "Medicine and peripherals",
     path: "/stock",
     icon: AiOutlineInbox,
+  },
+  {
+    label: "Prescriptions",
+    description: "Manage patient medications",
+    path: "/prescriptions",
+    icon: AiOutlineMedicineBox,
+  },
+  {
+    label: "Medical History",
+    description: "Access patient records",
+    path: "/medical-records",
+    icon: AiOutlineHistory,
+  },
+  {
+    label: "Settings",
+    description: "Clinic Settings",
+    path: "/settings",
+    icon: AiOutlineSetting,
   },
 ];
 
@@ -90,14 +108,14 @@ const patientNavigationItems = [
   {
     label: "Medical History",
     description: "Your Records",
-    path: "/medical-history",
+    path: "/medical-records",
     icon: AiOutlineHistory,
   },
   {
-    label: "Messages",
-    description: "Contact Staff",
-    path: "/messages",
-    icon: AiOutlineMessage,
+    label: "Settings",
+    description: "Update Settings",
+    path: "/settings",
+    icon: AiOutlineSetting,
   },
 ];
 
@@ -111,11 +129,54 @@ export default function DashboardLayout({
   const [userRole, setUserRole] = useState<"PATIENT" | "STAFF" | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const pathname = usePathname();
-  const supabase = createClientComponentClient();
   const { unreadCount, notifications } = useNotifications();
+  const searchParams = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
 
-  console.log("Current notifications:", notifications);
-  console.log("Unread count:", unreadCount);
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+
+  const router = useRouter();
+
+  const handleSettingsRoute = () => {
+    router.push("/settings");
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+
+    const params = new URLSearchParams(searchParams);
+    if (term) {
+      params.set("q", term);
+    } else {
+      params.delete("q");
+    }
+
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
+  const handleAddButton = () => {
+    switch (currentPageTitle) {
+      case "Patients":
+        setActiveModal("patient");
+        break;
+      case "Prescriptions":
+        setActiveModal("prescription");
+        break;
+      case "Sales and Finances":
+        setActiveModal("finances");
+        break;
+      case "Medical History":
+        setActiveModal("medical-record");
+        break;
+      case "Staff List":
+        setActiveModal("staff");
+        break;
+      case "Stock":
+        setActiveModal("stock");
+        break;
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -140,119 +201,158 @@ export default function DashboardLayout({
   }, [pathname, navigationItems]);
 
   return (
-    <div className="flex w-full">
-      <Sidebar
-        isSidebarOpen={isSidebarOpen}
-        navigationItems={navigationItems}
-      />
-
-      {isSidebarOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-10"
-          onClick={() => setSidebarOpen(false)}
+    <SearchContext.Provider value={{ searchTerm, setSearchTerm }}>
+      <div className="flex w-full">
+        <Sidebar
+          isSidebarOpen={isSidebarOpen}
+          navigationItems={navigationItems}
         />
-      )}
 
-      <main className="flex-1 lg:ml-72">
-        <header className="bg-gray-100 shadow-md sticky top-0 z-10">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-4 space-y-4 sm:space-y-0">
-            {/* Header content */}
-            <div className="flex items-center space-x-4 w-full sm:w-auto">
-              <button
-                className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"
-                onClick={() => setSidebarOpen(!isSidebarOpen)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="w-6 h-6"
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-10"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        <main className="flex-1 lg:ml-72">
+          <header className="bg-gray-100 shadow-md sticky top-0 z-10">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-4 space-y-4 sm:space-y-0">
+              {/* Header content */}
+              <div className="flex items-center space-x-4 w-full sm:w-auto">
+                <button
+                  className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"
+                  onClick={() => setSidebarOpen(!isSidebarOpen)}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 6h16M4 12h16m-7 6h7"
-                  />
-                </svg>
-              </button>
-              <h2 className="text-xl font-semibold text-gray-800">
-                {currentPageTitle}
-              </h2>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-              <div className="flex items-center space-x-2 order-2 sm:order-1">
-                {userRole === "STAFF" && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="w-6 h-6"
                   >
-                    <AiOutlinePlus className="w-5 h-5" />
-                  </motion.button>
-                )}
-
-                <div className="relative hidden md:block">
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="w-full sm:w-64 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end space-x-3 order-1 sm:order-2">
-                <div className="relative">
-                  <motion.button
-                    onClick={() => setShowNotifications(!showNotifications)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
-                  >
-                    <AiOutlineBell className="w-5 h-5 text-gray-600" />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </motion.button>
-                  {showNotifications && (
-                    <NotificationDropdown
-                      notifications={notifications}
-                      onClose={() => setShowNotifications(false)}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4 6h16M4 12h16m-7 6h7"
                     />
+                  </svg>
+                </button>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {currentPageTitle || ""}
+                </h2>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                <div className="flex items-center space-x-2 order-2 sm:order-1">
+                  {userRole === "STAFF" && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleAddButton}
+                      className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
+                    >
+                      <AiOutlinePlus className="w-5 h-5" />
+                    </motion.button>
                   )}
+
+                  <div className="relative hidden md:block">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={handleSearch}
+                      placeholder={`Search ${currentPageTitle.toLowerCase()}...`}
+                      className="w-full sm:w-64 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
                 </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
-                >
-                  <AiOutlineMessage className="w-5 h-5 text-gray-600" />
-                </motion.button>
-
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center space-x-2 bg-blue-600 text-white rounded-lg px-4 py-2 cursor-pointer"
-                >
-                  <AiOutlineUser className="w-5 h-5" />
-                  <span className="font-medium hidden sm:inline">
-                    {firstName}
-                  </span>
-                </motion.div>
+                <div className="flex items-center justify-end space-x-3 order-1 sm:order-2">
+                  <div className="relative">
+                    <motion.button
+                      onClick={() => setShowNotifications(!showNotifications)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                    >
+                      <AiOutlineBell className="w-5 h-5 text-gray-600" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </motion.button>
+                    {showNotifications && (
+                      <NotificationDropdown
+                        notifications={notifications}
+                        onClose={() => setShowNotifications(false)}
+                      />
+                    )}
+                  </div>
+                  {userRole === "STAFF" && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      onClick={handleSettingsRoute}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                    >
+                      <AiOutlineSetting className="w-5 h-5 text-gray-600" />
+                    </motion.button>
+                  )}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="flex items-center space-x-2 bg-blue-600 text-white rounded-lg px-4 py-2 cursor-pointer"
+                  >
+                    <AiOutlineUser className="w-5 h-5" />
+                    <span className="font-medium hidden sm:inline">
+                      {firstName}
+                    </span>
+                  </motion.div>
+                </div>
               </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        <div className="p-4 sm:p-6">{children}</div>
-      </main>
-    </div>
+          <div className="p-4 sm:p-6">{children}</div>
+          {activeModal === "patient" && (
+            <AddPatientModal
+              isOpen={true}
+              onClose={() => setActiveModal(null)}
+            />
+          )}
+          {activeModal === "prescription" && (
+            <AddPrescriptionModal
+              open={true}
+              onClose={() => setActiveModal(null)}
+            />
+          )}
+          {activeModal === "finances" && (
+            <AddFinancialRecordModal
+              isOpen={true}
+              onClose={() => setActiveModal(null)}
+            />
+          )}
+          {activeModal === "medical-record" && (
+            <AddMedicalRecordModal
+              open={true}
+              onClose={() => setActiveModal(null)}
+            />
+          )}
+          {activeModal === "staff" && (
+            <AddStaffModal isOpen={true} onClose={() => setActiveModal(null)} />
+          )}
+          {activeModal === "stock" && (
+            <AddStockItemModal
+              isOpen={true}
+              onClose={() => setActiveModal(null)}
+            />
+          )}
+        </main>
+      </div>
+    </SearchContext.Provider>
   );
 }

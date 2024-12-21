@@ -3,8 +3,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { createStockItem } from "@/lib/actions/stock.actions";
+import { getVendors } from "@/lib/actions/vendor.actions";
 
-export default function AddStockItemModal({ isOpen, onClose, vendors }) {
+export default function AddStockItemModal({ isOpen, onClose }) {
+  
+  const [vendors, setVendors] = useState([]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -18,6 +22,18 @@ export default function AddStockItemModal({ isOpen, onClose, vendors }) {
       status: "IN_STOCK",
     });
     onClose();
+    fetchData();
+  };
+
+  const fetchData = async () => {
+    try {
+      const vendorsData = await getVendors();
+      const stockData = await getStockItems();
+      setVendors(vendorsData);
+      setStockItems(stockData);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -95,7 +111,10 @@ export default function AddStockItemModal({ isOpen, onClose, vendors }) {
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={ () => {
+                    fetchData();
+onClose();
+                  }}
                   className="px-4 py-2 bg-gray-100 rounded-lg"
                 >
                   Cancel

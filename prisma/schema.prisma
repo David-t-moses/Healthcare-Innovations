@@ -23,11 +23,11 @@ model User {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   appointments    Appointment[]
-  medicalHistories MedicalHistory[]
-  prescriptions   Prescription[]
   paymentHistories PaymentHistory[]
   notifications   Notification[]
   orders StockOrder[]
+prescribedPrescriptions Prescription[] @relation("PrescribedBy")
+  recordedMedicalRecords MedicalRecord[] @relation("RecordedBy")
 }
 
 model Patient {
@@ -41,33 +41,10 @@ model Patient {
   status            String           @default("active")
   createdAt         DateTime         @default(now())
   lastVisit         DateTime?
-  medicalHistories  MedicalHistory[]
-  prescriptions     Prescription[]
   paymentHistories  PaymentHistory[]
   appointments      Appointment[]
-}
-
-model MedicalHistory {
-  id          String   @id @default(uuid())
-  patientId   String
-  diagnosis   String
-  notes       String?
-  date        DateTime @default(now())
-  staffId     String
-  patient     Patient  @relation(fields: [patientId], references: [id])
-  user        User     @relation(fields: [staffId], references: [id])
-}
-
-model Prescription {
-  id           String   @id @default(uuid())
-  patientId    String
-  medication   String
-  dosage       String
-  instructions String?
-  date         DateTime @default(now())
-  staffId      String
-  patient      Patient  @relation(fields: [patientId], references: [id])
-  user         User     @relation(fields: [staffId], references: [id])
+  medicalRecords MedicalRecord[]
+  prescriptions Prescription[]
 }
 
 model PaymentHistory {
@@ -161,6 +138,8 @@ enum NotificationType {
   APPOINTMENT_RESPONSE
   GENERAL
   STOCK_LOW
+  MEDICAL_RECORDS
+  PRESCRIPTIONS
 }
 
 model StockOrder {
@@ -177,4 +156,40 @@ model StockOrder {
   user        User      @relation(fields: [userId], references: [id])
 }
 
+model Prescription {
+  id            String   @id @default(cuid())
+  patientId     String
+  prescribedById String
+  medication    String
+  dosage        String
+  duration      String
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  patient      Patient  @relation(fields: [patientId], references: [id])
+  prescribedBy User     @relation("PrescribedBy", fields: [prescribedById], references: [id])
 
+  @@index([patientId])
+  @@index([prescribedById])
+}
+
+model MedicalRecord {
+  id           String    @id @default(cuid())
+  patientId    String
+  recordedById String
+  diagnosis    String
+  symptoms     String
+  treatment    String
+  notes        String?
+  attachments  String[]
+  recordDate   DateTime
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  patient     Patient   @relation(fields: [patientId], references: [id])
+  recordedBy  User      @relation("RecordedBy", fields: [recordedById], references: [id])
+
+  @@index([patientId])
+  @@index([recordedById])
+}

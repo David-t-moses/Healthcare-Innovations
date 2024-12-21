@@ -11,10 +11,6 @@ import AddFinancialRecordModal from "@/components/AddFinancialRecordModal";
 import { getSalesData, getPatients } from "@/lib/actions/sales.actions";
 
 export default function SalesPage() {
-  const [salesData, setSalesData] = useState({
-    payments: [],
-    financialRecords: [],
-  });
   const [patients, setPatients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("payments");
@@ -46,14 +42,7 @@ export default function SalesPage() {
     initializePage();
   }, []);
 
-  const fetchSalesData = async () => {
-    const { success, data, error } = await getSalesData();
-    if (success) {
-      setSalesData(data);
-    } else {
-      toast.error(error);
-    }
-  };
+  
 
   if (isLoading) {
     return <LoadingSpinner message="Loading sales data..." />;
@@ -219,13 +208,11 @@ export default function SalesPage() {
       <AddPaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setPaymentModalOpen(false)}
-        onSuccess={fetchSalesData}
         patients={patients}
       />
       <AddFinancialRecordModal
         isOpen={isFinancialModalOpen}
         onClose={() => setFinancialModalOpen(false)}
-        onSuccess={fetchSalesData}
       />
     </div>
   );

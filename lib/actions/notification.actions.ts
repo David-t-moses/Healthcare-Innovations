@@ -39,3 +39,22 @@ export async function markNotificationAsRead(notificationId: string) {
     return { success: false };
   }
 }
+
+export async function markAllNotificationsAsRead(userId: string) {
+  try {
+    await prisma.notification.updateMany({
+      where: {
+        userId: userId,
+        read: false,
+      },
+      data: { read: true },
+    });
+
+    // Trigger Pusher event to update UI
+    await pusherServer.trigger(`user-${userId}`, "all-notifications-read", {});
+
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
+}

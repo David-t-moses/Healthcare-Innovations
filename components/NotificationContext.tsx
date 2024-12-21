@@ -48,6 +48,15 @@ export function NotificationProvider({
   useEffect(() => {
     const channel = pusherClient.subscribe(`user-${userId}`);
 
+    channel.bind("all-notifications-read", () => {
+      setNotifications((prev) =>
+        prev.map((notification) => ({
+          ...notification,
+          read: true,
+        }))
+      );
+    });
+
     channel.bind("new-notification", (notification: any) => {
       setNotifications((prev) => [notification, ...prev]);
     });

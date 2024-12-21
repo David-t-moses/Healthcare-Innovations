@@ -24,6 +24,7 @@ export default function StaffPage() {
     fetchStaffData();
   }, []);
 
+  
   const fetchStaffData = async () => {
     try {
       const { success, data, error } = await getStaffList();
@@ -175,7 +176,6 @@ export default function StaffPage() {
         <AddStaffModal
           isOpen={isAddModalOpen}
           onClose={() => setAddModalOpen(false)}
-          onSuccess={fetchStaffData}
         />
       </div>
     </div>
