@@ -47,7 +47,7 @@ export default function PatientDashboard({ userId, searchTerm }) {
       );
       setActivePrescriptions(filteredPrescriptions);
 
-      const recordsData = await getPrescriptions();
+      const recordsData = await getMedicalRecords();
       const filteredRecords = recordsData.filter(
         (records) =>
           !searchTerm ||
@@ -73,8 +73,6 @@ export default function PatientDashboard({ userId, searchTerm }) {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Patient Dashboard</h1>
-
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 auto-rows-[minmax(180px,auto)]">
         {/* Next Appointment Widget - Spans 2 columns */}
         <Card className="p-6 md:col-span-2 hover:shadow-lg transition-shadow">
