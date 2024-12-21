@@ -56,16 +56,6 @@ export default function PatientDashboard({ userId, searchTerm }) {
       );
       setRecentRecords(filteredRecords);
 
-      // const upcoming = appointments
-      //   .filter((apt) => new Date(apt.startTime) > new Date())
-      //   .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
-      // setUpcomingAppointments(upcoming);
-
-      // const prescriptionsData = await getPrescriptions();
-      // setActivePrescriptions(prescriptionsData);
-
-      // const recordsData = await getMedicalRecords();
-      // setRecentRecords(recordsData.slice(0, 3));
     };
 
     loadDashboardData();
