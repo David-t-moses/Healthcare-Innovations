@@ -13,6 +13,7 @@ import {
 } from "@/lib/actions/settings.actions";
 import Button from "@/components/Button";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { getCurrentUser } from "@/lib/auth";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -24,8 +25,8 @@ export default function SettingsPage() {
     role: "",
     note: "",
     notificationPreferences: {
-      emailNotifications: false,
-      appointmentReminders: false,
+      emailNotifications: true,
+      appointmentReminders: true,
     },
     systemPreferences: {
       calendarView: "week",
@@ -37,17 +38,17 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.user) {
-        const result = await getUserSettings(session.user.id);
-        if (result.success && result.data) {
-          setUserData((prevData) => ({
-            ...prevData,
-            ...result.data,
-          }));
-        }
+      const user = await getCurrentUser();
+      if (user) {
+        setUserData((prevData) => ({
+          ...prevData,
+          fullName: user.fullName,
+          email: user.email,
+          role: user.role,
+          // Preserve other state properties
+          notificationPreferences: prevData.notificationPreferences,
+          systemPreferences: prevData.systemPreferences,
+        }));
       }
       setIsPageLoading(false);
     };
@@ -60,23 +61,15 @@ export default function SettingsPage() {
     setIsLoading(true);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const currentEmail = session?.user?.email;
-
-      if (!currentEmail) {
-        toast.error("Please sign in again");
-        return;
-      }
-
-      const result = await updateProfile(currentEmail, {
+      const result = await updateProfile({
         fullName: userData.fullName,
         email: userData.email,
       });
 
       if (result.success) {
-        toast.success("Profile updated successfully");
+        toast.success(
+          "Profile updated successfully! Reload browser to see changes."
+        );
         setUserData((prev) => ({
           ...prev,
           ...result.data,
@@ -92,30 +85,30 @@ export default function SettingsPage() {
     }
   };
 
-  const handleNotificationUpdate = async (key, value) => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const newPreferences = {
-      ...userData.notificationPreferences,
-      [key]: value,
-    };
+  // const handleNotificationUpdate = async (key, value) => {
+  //   const {
+  //     data: { session },
+  //   } = await supabase.auth.getSession();
+  //   const newPreferences = {
+  //     ...userData.notificationPreferences,
+  //     [key]: value,
+  //   };
 
-    const result = await updateNotificationPreferences(
-      session?.user?.id,
-      newPreferences
-    );
+  //   const result = await updateNotificationPreferences(
+  //     session?.user?.id,
+  //     newPreferences
+  //   );
 
-    if (result.success) {
-      setUserData((prev) => ({
-        ...prev,
-        notificationPreferences: newPreferences,
-      }));
-      toast.success("Notification preferences updated");
-    } else {
-      toast.error(result.error);
-    }
-  };
+  //   if (result.success) {
+  //     setUserData((prev) => ({
+  //       ...prev,
+  //       notificationPreferences: newPreferences,
+  //     }));
+  //     toast.success("Notification preferences updated");
+  //   } else {
+  //     toast.error(result.error);
+  //   }
+  // };
 
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
@@ -128,11 +121,7 @@ export default function SettingsPage() {
       return;
     }
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const result = await updatePassword(session?.user?.id, {
+    const result = await updatePassword({
       currentPassword: formData.get("currentPassword"),
       newPassword: newPassword,
     });
@@ -145,28 +134,18 @@ export default function SettingsPage() {
     }
   };
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.user) {
-        const result = await getUserSettings(session.user.id);
-        if (result.success) {
-          setUserData(result.data);
-        }
-      }
-    };
-
-    fetchUserData();
-  }, []);
-
-  const tabs = [
-    { id: "profile", label: "Profile Settings", icon: FiUser },
-    { id: "notifications", label: "Notifications", icon: FiBell },
-    { id: "security", label: "Security", icon: FiLock },
-    { id: "system", label: "System", icon: FiSettings },
-  ];
+  const tabs =
+    userData?.role === "STAFF"
+      ? [
+          { id: "profile", label: "Profile Settings", icon: FiUser },
+          // { id: "notifications", label: "Notifications", icon: FiBell },
+          { id: "security", label: "Security", icon: FiLock },
+          { id: "system", label: "System", icon: FiSettings },
+        ]
+      : [
+          { id: "profile", label: "Profile Settings", icon: FiUser },
+          { id: "security", label: "Security", icon: FiLock },
+        ];
 
   if (isPageLoading) {
     return <LoadingSpinner message="Loading settings..." />;
@@ -272,7 +251,7 @@ export default function SettingsPage() {
               </motion.div>
             )}
 
-            {activeTab === "notifications" && (
+            {/* {userData?.role === "STAFF" && activeTab === "notifications" && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -334,7 +313,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </motion.div>
-            )}
+            )} */}
 
             {activeTab === "security" && (
               <motion.div
@@ -391,7 +370,7 @@ export default function SettingsPage() {
               </motion.div>
             )}
 
-            {activeTab === "system" && (
+            {userData?.role === "STAFF" && activeTab === "system" && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

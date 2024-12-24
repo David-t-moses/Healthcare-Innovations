@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Button from "./Button";
 
 interface SignupFormProps {
@@ -9,6 +8,7 @@ interface SignupFormProps {
     email: string;
     password: string;
     role: "PATIENT" | "STAFF";
+    organizationKey?: string;
   };
   handleChange: (
     e: React.ChangeEvent<
@@ -96,10 +96,30 @@ export function SignupForm({
           required
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
         >
-          <option value="PATIENT">Patient</option>
           <option value="STAFF">Staff</option>
+          <option value="PATIENT">Patient</option>
         </select>
       </div>
+
+      {formData.role === "STAFF" && (
+        <div>
+          <label
+            htmlFor="organizationKey"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Organization Key
+          </label>
+          <input
+            type="password"
+            id="organizationKey"
+            name="organizationKey"
+            value={formData.organizationKey}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          />
+        </div>
+      )}
 
       {formData.role === "PATIENT" && (
         <>

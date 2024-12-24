@@ -5,12 +5,14 @@ import { motion } from "framer-motion";
 import { SignupForm } from "@/components/SignupForm";
 import { DecorativeSection } from "@/components/DecorativeSection";
 import { signUp } from "@/lib/actions/user.actions";
+import { toast } from "sonner";
 
 interface FormData {
   fullName: string;
   email: string;
   password: string;
   role: "PATIENT" | "STAFF";
+  organisationKey?: string;
   phone?: string;
   dateOfBirth?: string;
   insurance?: string;
@@ -23,7 +25,8 @@ export default function SignUp() {
     fullName: "",
     email: "",
     password: "",
-    role: "PATIENT",
+    role: "STAFF",
+    organisationKey: "",
     phone: "",
     dateOfBirth: "",
     insurance: "",
@@ -47,9 +50,10 @@ export default function SignUp() {
     startTransition(async () => {
       const result = await signUp(formData);
       if (result.success) {
-        window.location.href = "/dashboard";
+        toast.success(result.message);
+        // window.location.href = "/dashboard";
       } else if (result.error) {
-        alert(result.error);
+        toast.error(result.error);
         console.error(result.error);
       }
     });
@@ -69,7 +73,7 @@ export default function SignUp() {
             animate={{ y: 0 }}
             className="text-3xl font-bold text-blue-600 mb-2"
           >
-            Pharma App
+            Pharma
           </motion.h1>
           <p className="text-gray-600">Your Health, Our Priority</p>
         </div>

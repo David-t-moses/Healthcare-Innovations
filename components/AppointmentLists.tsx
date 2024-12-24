@@ -12,6 +12,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { AppointmentStatus } from "@prisma/client";
 import AppointmentResponse from "./AppointmentResponse";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 interface AppointmentsListProps {
   appointments: any[];
@@ -36,65 +38,87 @@ export default function AppointmentsList({
     return colors[status] || "bg-gray-100 text-gray-800";
   };
 
+  const router = useRouter();
+
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-gray-50">
-            <TableHead className="font-semibold">Title</TableHead>
-            <TableHead className="font-semibold">
-              {userRole === "STAFF" ? "Patient" : "Doctor"}
-            </TableHead>
-            <TableHead className="font-semibold">Date</TableHead>
-            <TableHead className="font-semibold">Time</TableHead>
-            <TableHead className="font-semibold">Status</TableHead>
-            {userRole === "PATIENT" && (
-              <TableHead className="font-semibold">Actions</TableHead>
-            )}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedAppointments.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                No appointments found
-              </TableCell>
+    <div>
+      {userRole === "STAFF" && (
+        <div className="mb-6">
+          <Button
+            onClick={() => router.push("/appointments/schedule")}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Schedule New Appointment
+          </Button>
+        </div>
+      )}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50">
+              <TableHead className="font-semibold">Title</TableHead>
+              <TableHead className="font-semibold">
+                {userRole === "STAFF" ? "Patient" : "Doctor"}
+              </TableHead>
+              <TableHead className="font-semibold">Date</TableHead>
+              <TableHead className="font-semibold">Time</TableHead>
+              <TableHead className="font-semibold">Status</TableHead>
+              {userRole === "PATIENT" && (
+                <TableHead className="font-semibold">Actions</TableHead>
+              )}
             </TableRow>
-          ) : (
-            sortedAppointments.map((apt) => (
-              <TableRow
-                key={apt.id}
-                className="hover:bg-gray-50 transition-colors"
-              >
-                <TableCell className="font-medium">{apt.title}</TableCell>
-                <TableCell>
-                  {userRole === "STAFF" ? apt.patient.name : apt.user.fullName}
+          </TableHeader>
+          <TableBody>
+            {sortedAppointments.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="text-center py-8 text-gray-500"
+                >
+                  No appointments found
                 </TableCell>
-                <TableCell>
-                  {format(new Date(apt.startTime), "MMM d, yyyy")}
-                </TableCell>
-                <TableCell>
-                  {format(new Date(apt.startTime), "h:mm a")}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    className={`${getStatusColor(
-                      apt.status
-                    )} px-3 py-1 rounded-full text-xs font-medium`}
-                  >
-                    {apt.status.toLowerCase()}
-                  </Badge>
-                </TableCell>
-                {userRole === "PATIENT" && (
-                  <TableCell>
-                    <AppointmentResponse appointment={apt} className="w-full" />
-                  </TableCell>
-                )}
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              sortedAppointments.map((apt) => (
+                <TableRow
+                  key={apt.id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
+                  <TableCell className="font-medium">{apt.title}</TableCell>
+                  <TableCell>
+                    {userRole === "STAFF"
+                      ? apt.patient.name
+                      : apt.user.fullName}
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(apt.startTime), "MMM d, yyyy")}
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(apt.startTime), "h:mm a")}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={`${getStatusColor(
+                        apt.status
+                      )} px-3 py-1 rounded-full text-xs font-medium`}
+                    >
+                      {apt.status.toLowerCase()}
+                    </Badge>
+                  </TableCell>
+                  {userRole === "PATIENT" && (
+                    <TableCell>
+                      <AppointmentResponse
+                        appointment={apt}
+                        className="w-full"
+                      />
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

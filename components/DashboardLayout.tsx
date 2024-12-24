@@ -197,7 +197,7 @@ export default function DashboardLayout({
 
   const currentPageTitle = useMemo(() => {
     const currentRoute = navigationItems.find((item) => item.path === pathname);
-    return currentRoute?.label || "Dashboard";
+    return currentRoute?.label || "Pharma";
   }, [pathname, navigationItems]);
 
   return (

@@ -1,6 +1,9 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { hash, compare } from "bcryptjs";
 
 type ProfileUpdateData = {
@@ -32,57 +35,34 @@ export async function updateNotificationPreferences(
   }
 }
 
-export async function updateProfile(
-  currentEmail: string,
-  data: ProfileUpdateData
-) {
-  const updateData = {
-    fullName: String(data.fullName),
-    email: String(data.email),
-  };
+export async function updateProfile(data: ProfileUpdateData) {
+  const currentUser = await getCurrentUser();
 
-  const updatedUser = await prisma.user.update({
-    where: {
-      email: String(currentEmail),
-    },
-    data: updateData,
-  });
-
-  return {
-    success: true,
-    data: updatedUser,
-  };
-}
-
-export async function updatePassword(
-  userId: string,
-  data: {
-    currentPassword: string;
-    newPassword: string;
+  if (!currentUser) {
+    return { success: false, error: "User not authenticated" };
   }
-) {
+
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    const supabase = createServerComponentClient({ cookies });
+
+    // Update Supabase auth
+    await supabase.auth.updateUser({
+      email: data.email,
+      data: { full_name: data.fullName },
     });
 
-    const isValid = await compare(data.currentPassword, user.password);
-    if (!isValid) {
-      return { success: false, error: "Current password is incorrect" };
-    }
-
-    const hashedPassword = await hash(data.newPassword, 12);
-    await prisma.user.update({
-      where: { id: userId },
+    // Update database
+    const updatedUser = await prisma.user.update({
+      where: { id: currentUser.id },
       data: {
-        password: hashedPassword,
-        updatedAt: new Date(),
+        fullName: data.fullName,
+        email: data.email,
       },
     });
 
-    return { success: true };
+    return { success: true, data: updatedUser };
   } catch (error) {
-    return { success: false, error: "Failed to update password" };
+    return { success: false, error: "Failed to update profile" };
   }
 }
 
@@ -101,5 +81,37 @@ export async function getUserSettings(userId: string) {
     return { success: true, data: user };
   } catch (error) {
     return { success: false, error: "Failed to fetch user settings" };
+  }
+}
+
+export async function updatePassword(data: {
+  currentPassword: string;
+  newPassword: string;
+}) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: "User not authenticated" };
+    }
+
+    // Verify current password
+    const isValidPassword = await compare(
+      data.currentPassword,
+      currentUser.password
+    );
+    if (!isValidPassword) {
+      return { success: false, error: "Current password is incorrect" };
+    }
+
+    // Hash and update new password
+    const hashedPassword = await hash(data.newPassword, 12);
+    await prisma.user.update({
+      where: { id: currentUser.id },
+      data: { password: hashedPassword },
+    });
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to update password" };
   }
 }

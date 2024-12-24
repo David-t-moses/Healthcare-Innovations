@@ -4,27 +4,53 @@ import { hash, compare } from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { createSession, destroySession } from "@/lib/session";
+import { sendVerificationEmail } from "@/lib/email";
+import { sendPasswordResetEmail } from "@/lib/email";
 
 export async function signUp(formData: {
   fullName: string;
   email: string;
   password: string;
-  role: "PATIENT" | "STAFF";
+  role: "STAFF" | "PATIENT";
+  organizationKey?: string;
   phone?: string;
   dateOfBirth?: string;
   insurance?: string;
   emergencyContact?: string;
 }) {
   try {
+    // Check password length
+    if (formData.password.length < 8) {
+      return { error: "Password must be at least 8 characters long" };
+    }
+
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: formData.email },
+    });
+
+    if (existingUser) {
+      return { error: "Email already registered" };
+    }
+
     const hashedPassword = await hash(formData.password, 10);
-    const normalizedRole = formData.role.toUpperCase() as "PATIENT" | "STAFF";
+    const normalizedRole = formData.role.toUpperCase() as "STAFF" | "PATIENT";
+    const verificationToken = crypto.randomUUID();
+
+    if (formData.role === "STAFF") {
+      if (formData.organizationKey !== process.env.ORGANIZATION_KEY) {
+        return { error: "Invalid organization key" };
+      }
+    }
 
     const user = await prisma.user.create({
       data: {
         fullName: formData.fullName,
         email: formData.email,
         password: hashedPassword,
-        role: normalizedRole,
+        role: formData.role,
+        verificationToken,
+        emailVerified: false,
       },
     });
 
@@ -45,15 +71,47 @@ export async function signUp(formData: {
       });
     }
 
-    await createSession(user.id);
+    await sendVerificationEmail(
+      formData.email,
+      formData.fullName,
+      verificationToken
+    );
+    
     return {
       success: true,
-      redirect: "/dashboard",
+      message: "Please check your email to verify your account",
     };
   } catch (error) {
     return {
-      error: error instanceof Error ? error.message : "Something went wrong",
+      error: error instanceof Error ? error.message : "Failed to create account",
     };
+  }
+}
+
+
+export async function verifyEmail(token: string) {
+  try {
+    const user = await prisma.user.findFirst({
+      where: { verificationToken: token },
+    });
+
+    if (!user) {
+      return { error: "Invalid verification token" };
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        verificationToken: null,
+      },
+    });
+
+    await createSession(user.id);
+
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to verify email" };
   }
 }
 
@@ -79,7 +137,6 @@ export async function signIn(formData: { email: string; password: string }) {
       return { error: "Invalid credentials" };
     }
 
-    // Create session and redirect
     await createSession(user.id);
 
     const { password: _, ...userWithoutPassword } = user;
@@ -97,4 +154,55 @@ export async function signIn(formData: { email: string; password: string }) {
 export async function signOut() {
   await destroySession();
   redirect("/sign-in");
+}
+
+export async function requestPasswordReset(email: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return { error: "No account found with this email" };
+    }
+
+    const resetToken = crypto.randomUUID();
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { resetPasswordToken: resetToken },
+    });
+
+    await sendPasswordResetEmail(email, user.fullName, resetToken);
+
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to process request" };
+  }
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+  try {
+    const user = await prisma.user.findFirst({
+      where: { resetPasswordToken: token },
+    });
+
+    if (!user) {
+      return { error: "Invalid or expired reset link" };
+    }
+
+    const hashedPassword = await hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetPasswordToken: null,
+      },
+    });
+
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to reset password" };
+  }
 }

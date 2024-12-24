@@ -94,6 +94,14 @@ const Signin = () => {
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               required
             />
+            <div className="flex justify-end mt-2">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-blue-600 hover:text-blue-700 transition-colors duration-200 font-medium"
+              >
+                Forgot Password?
+              </Link>
+            </div>
           </div>
 
           <motion.button

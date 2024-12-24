@@ -20,13 +20,16 @@ model User {
   password        String
   role            Role           @default(PATIENT)
   note            String?
+  emailVerified   Boolean        @default(false)    // Add this
+  verificationToken String?                         // Add this
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   appointments    Appointment[]
   paymentHistories PaymentHistory[]
   notifications   Notification[]
   orders StockOrder[]
-prescribedPrescriptions Prescription[] @relation("PrescribedBy")
+  resetPasswordToken String?
+  prescribedPrescriptions Prescription[] @relation("PrescribedBy")
   recordedMedicalRecords MedicalRecord[] @relation("RecordedBy")
 }
 

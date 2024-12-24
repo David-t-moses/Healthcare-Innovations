@@ -43,25 +43,6 @@ export async function getSalesData() {
     };
   }
 }
-
-// export async function getPatients() {
-//   try {
-//     const patients = await prisma.patient.findMany({
-//       select: {
-//         id: true,
-//         name: true,
-//       },
-//       orderBy: {
-//         name: "asc",
-//       },
-//     });
-//     return { success: true, data: patients };
-//   } catch (error) {
-//     console.error("Error fetching patients:", error);
-//     return { success: false, error: "Failed to fetch patients" };
-//   }
-// }
-
 export async function getPatients() {
   try {
     const patients = await prisma.patient.findMany({
