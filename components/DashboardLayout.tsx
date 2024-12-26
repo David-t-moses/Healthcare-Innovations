@@ -24,10 +24,11 @@ import AddPatientModal from "./AddPatientModal";
 import AddPrescriptionModal from "./AddPrescriptionModal";
 import AddStaffModal from "./AddStaffModal";
 import AddStockItemModal from "./AddStockItemModal";
-import AddMedicalRecordModal from "./AddMedicalRecordModal";
+// import AddMedicalRecordModal from "./AddMedicalRecordModal";
 import AddFinancialRecordModal from "./AddFinancialRecordModal";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { SearchContext } from "./SearchContext";
+import AddMedicalRecordModal from "./AddMedicalRecordModal";
 
 export const staffNavigationItems = [
   {
