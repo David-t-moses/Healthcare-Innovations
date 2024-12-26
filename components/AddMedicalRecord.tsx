@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createMedicalRecord } from "@/lib/actions/medical-record.actions";
 import { PatientSelect } from "./PatientSelect";
 
-export default function AddMedicalRecordModal({ open, onClose }) {
+export default function AddMedicalRecord({ open, onClose }) {
   const [formData, setFormData] = useState({
     patientId: "",
     diagnosis: "",

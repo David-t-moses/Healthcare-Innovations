@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-// import AddMedicalRecordModal from "./AddMedicalRecordModal";
 import EditMedicalRecordModal from "./EditMedicalRecordModal";
 import {
   getMedicalRecords,
@@ -30,7 +29,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import AddMedicalRecordModal from "./AddMedicalRecordModal";
+import AddMedicalRecord from "./AddMedicalRecord";
 
 export default function MedicalRecordList({ userRole }) {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -217,7 +216,7 @@ export default function MedicalRecordList({ userRole }) {
           ))}
         </div>
       )}
-      <AddMedicalRecordModal
+      <AddMedicalRecord
         open={showAddModal}
         onClose={() => {
           setShowAddModal(false);

@@ -24,11 +24,10 @@ import AddPatientModal from "./AddPatientModal";
 import AddPrescriptionModal from "./AddPrescriptionModal";
 import AddStaffModal from "./AddStaffModal";
 import AddStockItemModal from "./AddStockItemModal";
-// import AddMedicalRecordModal from "./AddMedicalRecordModal";
 import AddFinancialRecordModal from "./AddFinancialRecordModal";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { SearchContext } from "./SearchContext";
-import AddMedicalRecordModal from "./AddMedicalRecordModal";
+import AddMedicalRecord from "./AddMedicalRecord";
 
 export const staffNavigationItems = [
   {
@@ -338,7 +337,7 @@ export default function DashboardLayout({
             />
           )}
           {activeModal === "medical-record" && (
-            <AddMedicalRecordModal
+            <AddMedicalRecord
               open={true}
               onClose={() => setActiveModal(null)}
             />
