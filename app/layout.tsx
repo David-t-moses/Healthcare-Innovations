@@ -5,8 +5,6 @@ import { SupabaseProvider } from "@/components/SupabaseProvider";
 import { Toaster } from "sonner";
 import { NotificationProvider } from "@/components/NotificationContext";
 import { getCurrentUser } from "@/lib/auth";
-// import { checkDailyMedications } from "@/lib/actions/prescription.actions";
-import { useEffect } from "react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -34,27 +32,13 @@ export default async function RootLayout({
 }>) {
   const user = await getCurrentUser();
 
-  // useEffect(() => {
-  //   const checkMedications = async () => {
-  //     const now = new Date();
-  //     if (now.getHours() === 9) {
-  //       await checkDailyMedications();
-  //     }
-  //   };
-
-  //   const interval = setInterval(checkMedications, 1000 * 60 * 60 * 24);
-  //   checkMedications();
-
-  //   return () => clearInterval(interval);
-  // }, []);
-
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-200 w-full`}
       >
         <SupabaseProvider>
-          <NotificationProvider userId={user?.id || ""}>
+          <NotificationProvider userId={user?.id}>
             {children}
           </NotificationProvider>
         </SupabaseProvider>
