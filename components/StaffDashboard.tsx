@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Calendar from "@/components/Calender";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import FinancialWidget from "@/components/FinancialWidget";
 import StaffOverview from "@/components/StaffOverview";
 import StockWidget from "@/components/StockWidget";
@@ -31,7 +30,7 @@ const defaultLayout: Widget[] = [
   { id: "stock", title: "Stock Status", size: "sm" },
 ];
 
-export default function DashboardContent({ searchTerm }) {
+export default function DashboardContent({ searchTerm, userId }) {
   const [widgets, setWidgets] = useState(
     defaultLayout.map((widget) => ({
       ...widget,
@@ -39,12 +38,7 @@ export default function DashboardContent({ searchTerm }) {
       isMaximized: false,
     }))
   );
-  const [isClient, setIsClient] = useState(false);
   const supabase = createClientComponentClient();
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -110,10 +104,6 @@ export default function DashboardContent({ searchTerm }) {
     );
   };
 
-  if (!isClient) {
-    return <LoadingSpinner message="Loading your dashboard..." />;
-  }
-
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <Droppable droppableId="dashboard" direction="vertical" type="widget">
@@ -157,7 +147,9 @@ export default function DashboardContent({ searchTerm }) {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                         >
-                          {widget.id === "calendar" && <Calendar />}
+                          {widget.id === "calendar" && (
+                            <Calendar userId={userId} userRole="STAFF" />
+                          )}
                           {widget.id === "financial" && <FinancialWidget />}
                           {widget.id === "staff" && <StaffOverview />}
                           {widget.id === "stock" && <StockWidget />}

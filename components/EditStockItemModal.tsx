@@ -8,13 +8,17 @@ export default function EditStockItemModal({ isOpen, onClose, item, vendors }) {
     e.preventDefault();
     const formData = new FormData(e.target);
 
-    await updateStockItem(item.id, {
-      name: formData.get("name") as string,
+    const updateData = {
+      name: formData.get("name"),
       quantity: Number(formData.get("quantity")),
       minimumQuantity: Number(formData.get("minimumQuantity")),
-      reorderQuantity: Number(formData.get("reorderQuantity")),
-      vendorId: formData.get("vendorId") as string,
-    });
+      reorderQuantity: Number(formData.get("reorderQuantity")), // Make sure this is included
+      vendorId: formData.get("vendorId"),
+    };
+
+    console.log("Edit Modal Update Data:", updateData);
+
+    await updateStockItem(item.id, updateData);
     onClose();
   };
 
@@ -64,6 +68,18 @@ export default function EditStockItemModal({ isOpen, onClose, item, vendors }) {
                   name="minimumQuantity"
                   type="number"
                   defaultValue={item.minimumQuantity}
+                  className="w-full p-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Reorder Quantity
+                </label>
+                <input
+                  name="reorderQuantity"
+                  type="number"
+                  defaultValue={item.reorderQuantity}
                   className="w-full p-2 border rounded-lg"
                   required
                 />

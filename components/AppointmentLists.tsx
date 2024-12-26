@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -12,8 +13,19 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { AppointmentStatus } from "@prisma/client";
 import AppointmentResponse from "./AppointmentResponse";
+import EditAppointmentModal from "./EditAppointmentModal";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { deleteAppointment } from "@/lib/actions/appointment.actions";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useState } from "react";
 
 interface AppointmentsListProps {
   appointments: any[];
@@ -24,6 +36,8 @@ export default function AppointmentsList({
   appointments,
   userRole,
 }: AppointmentsListProps) {
+  const [editingAppointment, setEditingAppointment] = useState(null);
+
   // Sort appointments by date, most recent first
   const sortedAppointments = [...appointments].sort(
     (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
@@ -39,6 +53,20 @@ export default function AppointmentsList({
   };
 
   const router = useRouter();
+
+  const handleDelete = async (appointmentId: string) => {
+    try {
+      const result = await deleteAppointment(appointmentId);
+      if (result.success) {
+        toast.success("Appointment deleted successfully");
+        router.refresh();
+      } else {
+        toast.error(result.error || "Failed to delete appointment");
+      }
+    } catch (error) {
+      toast.error("An error occurred while deleting the appointment");
+    }
+  };
 
   return (
     <div>
@@ -105,6 +133,32 @@ export default function AppointmentsList({
                       {apt.status.toLowerCase()}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                "Are you sure you want to delete this appointment?"
+                              )
+                            ) {
+                              handleDelete(apt.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Appointment
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                   {userRole === "PATIENT" && (
                     <TableCell>
                       <AppointmentResponse
@@ -119,6 +173,12 @@ export default function AppointmentsList({
           </TableBody>
         </Table>
       </div>
+      <EditAppointmentModal
+        appointment={editingAppointment}
+        open={!!editingAppointment}
+        onClose={() => setEditingAppointment(null)}
+        onUpdate={() => router.refresh()}
+      />
     </div>
   );
 }

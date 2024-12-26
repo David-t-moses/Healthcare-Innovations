@@ -3,8 +3,8 @@
 import prisma from "@/lib/prisma";
 import { pusherServer } from "@/lib/pusher";
 import { Resend } from "resend";
-import { format } from "date-fns";
 import { getCurrentUser } from "@/lib/auth";
+import { sendReorderEmail } from "../email";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -40,7 +40,10 @@ export async function createStockItem(data: {
   status: string;
 }) {
   const stockItem = await prisma.stockItem.create({
-    data,
+    data: {
+      ...data,
+      reorderQuantity: Number(data.reorderQuantity),
+    },
   });
 
   if (stockItem.quantity <= stockItem.minimumQuantity) {
@@ -63,6 +66,9 @@ export async function getStockItems() {
 }
 
 export async function deleteStockItem(id: string) {
+  await prisma.stockOrder.deleteMany({
+    where: { stockItemId: id },
+  });
   return await prisma.stockItem.delete({
     where: { id },
   });
@@ -71,7 +77,10 @@ export async function deleteStockItem(id: string) {
 export async function updateStockItem(id: string, data: any) {
   const updatedItem = await prisma.stockItem.update({
     where: { id },
-    data,
+    data: {
+      ...data,
+      reorderQuantity: Number(data.reorderQuantity),
+    },
     include: {
       vendor: true,
     },
@@ -106,70 +115,106 @@ export async function reorderStock(stockItemId: string) {
     },
   });
 
+  await prisma.stockItem.update({
+    where: { id: stockItemId },
+    data: {
+      quantity: {
+        increment: stockItem.reorderQuantity,
+      },
+    },
+  });
+
   await notifyAllStaff(
     "Stock Reorder Placed",
     `Reorder placed for ${stockItem.name} (${stockItem.reorderQuantity} units)`,
     "GENERAL"
   );
 
-  await resend.emails.send({
-    from: process.env.SENDER_EMAIL!,
-    to: stockItem.vendor.email!,
-    subject: "Stock Reorder Request",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
-        <div style="background-color: white; border-radius: 8px; padding: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <h1 style="color: #1e40af; margin-bottom: 24px; text-align: center;">Stock Reorder Request</h1>
-          
-          <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 16px; margin-bottom: 24px;">
-            <h2 style="color: #1e3a8a; margin: 0 0 8px 0;">Order Details</h2>
-            <p style="color: #64748b; margin: 0;">Please review and process this order request.</p>
-          </div>
+  sendReorderEmail(stockItem);
 
-          <div style="margin-bottom: 24px;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Item Name</td>
-                <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${
-                  stockItem.name
-                }</td>
-              </tr>
-              <tr>
-                <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Quantity</td>
-                <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${
-                  stockItem.reorderQuantity
-                } units</td>
-              </tr>
-              <tr>
-                <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Order ID</td>
-                <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${
-                  order.id
-                }</td>
-              </tr>
-              <tr>
-                <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Date</td>
-                <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${format(
-                  new Date(),
-                  "PPP"
-                )}</td>
-              </tr>
-            </table>
-          </div>
+  // const mailOptions = {
+  //   from: process.env.EMAIL_USER,
+  //   to: stockItem.vendor.email,
+  //   subject: "🔔 New Stock Reorder Request - Urgent Action Required",
+  //   html: `
+  //     <!DOCTYPE html>
+  //     <html>
+  //       <head>
+  //         <meta charset="utf-8">
+  //         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  //         <title>Stock Reorder Request</title>
+  //       </head>
+  //       <body style="margin: 0; padding: 0; background-color: #f9fafb; font-family: Arial, sans-serif;">
+  //         <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+  //           <tr>
+  //             <td align="center" style="padding: 20px 0;">
+  //               <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 2px; border-radius: 16px;">
+  //                 <div style="background-color: white; border-radius: 14px; padding: 30px;">
+  //                   <!-- Header -->
+  //                   <div style="text-align: center; margin-bottom: 30px;">
+  //                     <h1 style="color: #1e40af; font-size: 24px; margin: 0;">Stock Reorder Request</h1>
+  //                     <p style="color: #6b7280; margin-top: 10px;">Order #${order.id.slice(
+  //                       0,
+  //                       8
+  //                     )}</p>
+  //                   </div>
 
-          <div style="text-align: center;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/orders/${order.id}"
-               style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-              View Order Details
-            </a>
-          </div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 24px; color: #64748b; font-size: 14px;">
-          <p>This is an automated message from your inventory management system.</p>
-        </div>
-      </div>
-    `,
-  });
+  //                   <!-- Order Summary Box -->
+  //                   <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+  //                     <table width="100%" cellpadding="0" cellspacing="0">
+  //                       <tr>
+  //                         <td style="padding-bottom: 15px;">
+  //                           <div style="font-size: 16px; color: #1e40af; font-weight: bold;">Item Details</div>
+  //                         </td>
+  //                       </tr>
+  //                       <tr>
+  //                         <td>
+  //                           <table width="100%" cellpadding="8" cellspacing="0" style="background-color: white; border-radius: 6px;">
+  //                             <tr>
+  //                               <td style="color: #6b7280;">Item Name:</td>
+  //                               <td style="font-weight: bold; color: #1f2937; text-align: right;">${
+  //                                 stockItem.name
+  //                               }</td>
+  //                             </tr>
+  //                             <tr>
+  //                               <td style="color: #6b7280;">Quantity:</td>
+  //                               <td style="font-weight: bold; color: #1f2937; text-align: right;">${
+  //                                 stockItem.reorderQuantity
+  //                               } units</td>
+  //                             </tr>
+  //                             <tr>
+  //                               <td style="color: #6b7280;">Order Date:</td>
+  //                               <td style="font-weight: bold; color: #1f2937; text-align: right;">${format(
+  //                                 new Date(),
+  //                                 "PPP"
+  //                               )}</td>
+  //                             </tr>
+  //                           </table>
+  //                         </td>
+  //                       </tr>
+  //                     </table>
+  //                   </div>
+
+  //   //
+
+  //                   <!-- Additional Info -->
+  //                   <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+  //                     <p style="color: #6b7280; font-size: 14px; text-align: center; margin: 0;">
+  //                       This is an automated message from your inventory management system.<br>
+  //                       Please process this order as soon as possible.
+  //                     </p>
+  //                   </div>
+  //                 </div>
+  //               </div>
+  //             </td>
+  //           </tr>
+  //         </table>
+  //       </body>
+  //     </html>
+  //   `,
+  // };
+
+  // await transporter.sendMail(mailOptions);
 
   return { success: true, order };
 }

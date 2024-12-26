@@ -3,15 +3,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
-import { createPayment } from "@/lib/actions/sales.actions";
+import { createPayment, getSalesData } from "@/lib/actions/sales.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 const supabase = createClientComponentClient();
 
-export default function AddPaymentModal({
-  isOpen,
-  onClose,
-  patients,
-}) {
+export default function AddPaymentModal({ isOpen, onClose, patients }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [salesData, setSalesData] = useState({
     payments: [],

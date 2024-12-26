@@ -14,7 +14,7 @@ import { toast } from "sonner";
 export default function PatientsPage() {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // State to manage loading
+  const [isLoading, setIsLoading] = useState(true);
   const supabase = createClientComponentClient();
 
   // Simulated data fetching

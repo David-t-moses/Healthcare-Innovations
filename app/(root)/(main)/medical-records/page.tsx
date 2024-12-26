@@ -5,12 +5,18 @@ import { useState, useEffect } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import MedicalRecordList from "@/components/MedicalRecordList";
 
-export default async function MedicalRecordsPage() {
+export default function MedicalRecordsPage() {
   const [isLoading, setIsLoading] = useState(true);
-  const user = await getCurrentUser();
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    setIsLoading(false);
+    const fetchUser = async () => {
+      const userData = await getCurrentUser();
+      setUser(userData);
+      setIsLoading(false);
+    };
+
+    fetchUser();
   }, []);
 
   if (isLoading) {

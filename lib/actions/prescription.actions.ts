@@ -87,3 +87,50 @@ export async function createPrescription(data: {
 
   return prescription;
 }
+
+export async function deletePrescription(prescriptionId: string) {
+  try {
+    await prisma.notification.deleteMany({
+      where: {
+        AND: [
+          { type: "PRESCRIPTIONS" },
+          { message: { contains: prescriptionId } },
+        ],
+      },
+    });
+
+    const deletedPrescription = await prisma.prescription.delete({
+      where: { id: prescriptionId },
+    });
+
+    return { success: true, prescription: deletedPrescription };
+  } catch (error) {
+    return { success: false, error: "Failed to delete prescription" };
+  }
+}
+
+export async function updatePrescription(
+  prescriptionId: string,
+  data: {
+    medication: string;
+    dosage: string;
+    duration: string;
+    notes?: string;
+  }
+) {
+  try {
+    const updatedPrescription = await prisma.prescription.update({
+      where: { id: prescriptionId },
+      data: {
+        medication: data.medication,
+        dosage: data.dosage,
+        duration: data.duration,
+        notes: data.notes,
+      },
+    });
+
+    return { success: true, prescription: updatedPrescription };
+  } catch (error) {
+    return { success: false, error: "Failed to update prescription" };
+  }
+}

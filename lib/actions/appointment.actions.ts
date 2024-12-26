@@ -206,3 +206,43 @@ export async function getAppointments(
     return { success: false, error: "Failed to fetch appointments" };
   }
 }
+
+export async function deleteAppointment(appointmentId: string) {
+  try {
+    await prisma.notification.deleteMany({
+      where: {
+        AND: [
+          { type: "APPOINTMENT_REQUEST" },
+          { message: { contains: appointmentId } },
+        ],
+      },
+    });
+
+    const appointment = await prisma.appointment.delete({
+      where: { id: appointmentId },
+    });
+    return { success: true, appointment };
+  } catch (error) {
+    return { success: false, error: "Failed to delete appointment" };
+  }
+}
+
+export async function updateAppointment(
+  appointmentId: string,
+  data: {
+    title: string;
+    startTime: Date;
+    endTime: Date;
+    notes?: string;
+  }
+) {
+  try {
+    const appointment = await prisma.appointment.update({
+      where: { id: appointmentId },
+      data,
+    });
+    return { success: true, appointment };
+  } catch (error) {
+    return { success: false, error: "Failed to update appointment" };
+  }
+}

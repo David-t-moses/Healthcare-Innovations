@@ -1,13 +1,20 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import { createStockItem } from "@/lib/actions/stock.actions";
+import { useEffect, useState } from "react";
+import { createStockItem, getStockItems } from "@/lib/actions/stock.actions";
 import { getVendors } from "@/lib/actions/vendor.actions";
 
 export default function AddStockItemModal({ isOpen, onClose }) {
-  
   const [vendors, setVendors] = useState([]);
+  const [stockItems, setStockItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchData();
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -111,9 +118,9 @@ export default function AddStockItemModal({ isOpen, onClose }) {
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   type="button"
-                  onClick={ () => {
+                  onClick={() => {
                     fetchData();
-onClose();
+                    onClose();
                   }}
                   className="px-4 py-2 bg-gray-100 rounded-lg"
                 >

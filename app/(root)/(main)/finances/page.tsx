@@ -3,52 +3,106 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AiOutlinePlus } from "react-icons/ai";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import AddPaymentModal from "@/components/AddPaymentModal";
+import EditPaymentModal from "@/components/EditPaymentModal";
 import AddFinancialRecordModal from "@/components/AddFinancialRecordModal";
-import { getSalesData, getPatients } from "@/lib/actions/sales.actions";
+import EditFinancialRecordModal from "@/components/EditFinancialRecordModal";
+import {
+  getSalesData,
+  getPatients,
+  deletePayment,
+  deleteFinancialRecord,
+} from "@/lib/actions/sales.actions";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 
 export default function SalesPage() {
   const [patients, setPatients] = useState([]);
+  const [salesData, setSalesData] = useState({
+    payments: [],
+    financialRecords: [],
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("payments");
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
   const [isFinancialModalOpen, setFinancialModalOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
+  const [editingFinancialRecord, setEditingFinancialRecord] = useState(null);
 
   useEffect(() => {
-    const initializePage = async () => {
-      const [salesResponse, patientsResponse] = await Promise.all([
-        getSalesData(),
-        getPatients(),
-      ]);
-
-      if (salesResponse.success) {
-        setSalesData(salesResponse.data);
-      } else {
-        toast.error(salesResponse.error);
-      }
-
-      if (patientsResponse.success) {
-        setPatients(patientsResponse.data);
-      } else {
-        toast.error(patientsResponse.error);
-      }
-
-      setIsLoading(false);
-    };
-
     initializePage();
   }, []);
 
-  
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      setIsLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  const initializePage = async () => {
+    const [salesResponse, patientsResponse] = await Promise.all([
+      getSalesData(),
+      getPatients(),
+    ]);
+
+    if (salesResponse.success) {
+      setSalesData(salesResponse.data);
+    } else {
+      toast.error(salesResponse.error);
+    }
+
+    if (patientsResponse.success) {
+      setPatients(patientsResponse.data);
+    } else {
+      toast.error(patientsResponse.error);
+    }
+  };
+
+  const handleEdit = (item) => {
+    if (activeTab === "payments") {
+      setEditingPayment(item);
+    } else {
+      setEditingFinancialRecord(item);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this record?")) {
+      const action =
+        activeTab === "payments" ? deletePayment : deleteFinancialRecord;
+      const result = await action(id);
+
+      if (result.success) {
+        toast.success("Record deleted successfully");
+        const salesResponse = await getSalesData();
+        if (salesResponse.success) {
+          setSalesData(salesResponse.data);
+        }
+      } else {
+        toast.error("Failed to delete record");
+      }
+    }
+  };
 
   if (isLoading) {
     return <LoadingSpinner message="Loading sales data..." />;
   }
 
-  const totalRevenue = salesData.payments.reduce(
+  const totalRevenue = salesData?.payments?.reduce(
     (sum, payment) => sum + Number(payment.amount),
     0
   );
@@ -169,6 +223,29 @@ export default function SalesPage() {
                   <td className="px-6 py-4">
                     {payment.paymentMethod || "N/A"}
                   </td>
+
+                  <td className="px-6 py-4">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(payment)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => handleDelete(payment.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -198,6 +275,28 @@ export default function SalesPage() {
                   <td className="px-6 py-4">
                     {format(new Date(record.date), "PPp")}
                   </td>
+                  <td className="px-6 py-4">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(record)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => handleDelete(record.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -213,6 +312,18 @@ export default function SalesPage() {
       <AddFinancialRecordModal
         isOpen={isFinancialModalOpen}
         onClose={() => setFinancialModalOpen(false)}
+      />
+      <EditPaymentModal
+        payment={editingPayment}
+        open={!!editingPayment}
+        onClose={() => setEditingPayment(null)}
+        onUpdate={initializePage}
+      />
+      <EditFinancialRecordModal
+        record={editingFinancialRecord}
+        open={!!editingFinancialRecord}
+        onClose={() => setEditingFinancialRecord(null)}
+        onUpdate={initializePage}
       />
     </div>
   );

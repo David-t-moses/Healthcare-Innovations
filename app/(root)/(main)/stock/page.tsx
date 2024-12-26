@@ -159,9 +159,9 @@ export default function StockPage() {
                 ) : (
                   <>
                     <span>Reorder Stock</span>
-                    {/* <span className="text-sm">
+                    <span className="text-sm">
                       ({item.reorderQuantity} units)
-                    </span> */}
+                    </span>
                   </>
                 )}
               </motion.button>

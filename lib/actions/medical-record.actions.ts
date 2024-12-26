@@ -90,3 +90,51 @@ export async function createMedicalRecord(data: {
 
   return record;
 }
+
+export async function deleteMedicalRecord(recordId: string) {
+  try {
+    // Delete related notifications first
+    await prisma.notification.deleteMany({
+      where: {
+        AND: [{ type: "MEDICAL_RECORDS" }, { message: { contains: recordId } }],
+      },
+    });
+
+    // Delete the medical record
+    const deletedRecord = await prisma.medicalRecord.delete({
+      where: { id: recordId },
+    });
+
+    return { success: true, record: deletedRecord };
+  } catch (error) {
+    console.error("Error deleting medical record:", error);
+    return { success: false, error: "Failed to delete medical record" };
+  }
+}
+
+export async function updateMedicalRecord(
+  recordId: string,
+  data: {
+    diagnosis: string;
+    symptoms: string;
+    treatment: string;
+    notes?: string;
+  }
+) {
+  try {
+    const updatedRecord = await prisma.medicalRecord.update({
+      where: { id: recordId },
+      data: {
+        diagnosis: data.diagnosis,
+        symptoms: data.symptoms,
+        treatment: data.treatment,
+        notes: data.notes,
+      },
+    });
+
+    return { success: true, record: updatedRecord };
+  } catch (error) {
+    console.error("Error updating medical record:", error);
+    return { success: false, error: "Failed to update medical record" };
+  }
+}

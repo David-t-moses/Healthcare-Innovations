@@ -25,11 +25,22 @@ export async function getSalesData() {
         },
       })) || [];
 
+    // Convert Decimal to number
+    const serializedPayments = payments.map((payment) => ({
+      ...payment,
+      amount: Number(payment.amount),
+    }));
+
+    const serializedRecords = financialRecords.map((record) => ({
+      ...record,
+      amount: Number(record.amount),
+    }));
+
     return {
       success: true,
       data: {
-        payments: payments || [],
-        financialRecords: financialRecords || [],
+        payments: serializedPayments || [],
+        financialRecords: serializedRecords || [],
       },
     };
   } catch (error) {
@@ -129,5 +140,65 @@ export async function createFinancialRecord(data: {
   } catch (error) {
     console.error("Error creating financial record:", error);
     return { success: false, error: "Failed to create financial record" };
+  }
+}
+
+export async function deletePayment(paymentId: string) {
+  try {
+    await prisma.paymentHistory.delete({
+      where: { id: paymentId },
+    });
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to delete payment" };
+  }
+}
+
+export async function updatePayment(
+  paymentId: string,
+  data: {
+    amount: number;
+    status: string;
+    paymentMethod: string;
+  }
+) {
+  try {
+    const payment = await prisma.paymentHistory.update({
+      where: { id: paymentId },
+      data,
+    });
+    return { success: true, payment };
+  } catch (error) {
+    return { success: false, error: "Failed to update payment" };
+  }
+}
+
+export async function deleteFinancialRecord(recordId: string) {
+  try {
+    await prisma.financialRecord.delete({
+      where: { id: recordId },
+    });
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to delete record" };
+  }
+}
+
+export async function updateFinancialRecord(
+  recordId: string,
+  data: {
+    type: string;
+    amount: number;
+    date: Date;
+  }
+) {
+  try {
+    const record = await prisma.financialRecord.update({
+      where: { id: recordId },
+      data,
+    });
+    return { success: true, record };
+  } catch (error) {
+    return { success: false, error: "Failed to update record" };
   }
 }
