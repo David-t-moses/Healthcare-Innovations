@@ -29,7 +29,7 @@ import AddFinancialRecordModal from "./AddFinancialRecordModal";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { SearchContext } from "./SearchContext";
 
-const staffNavigationItems = [
+export const staffNavigationItems = [
   {
     label: "Dashboard",
     description: "General Overview",
@@ -86,7 +86,7 @@ const staffNavigationItems = [
   },
 ];
 
-const patientNavigationItems = [
+export const patientNavigationItems = [
   {
     label: "Dashboard",
     description: "Your Overview",
