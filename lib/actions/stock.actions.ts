@@ -2,11 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { pusherServer } from "@/lib/pusher";
-import { Resend } from "resend";
 import { getCurrentUser } from "@/lib/auth";
 import { sendReorderEmail } from "../email";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function notifyAllStaff(title: string, message: string, type: string) {
   const staffUsers = await prisma.user.findMany({

@@ -3,11 +3,7 @@
 import prisma from "@/lib/prisma";
 import { AppointmentStatus } from "@prisma/client";
 import { pusherServer } from "../pusher";
-import { Resend } from "resend";
 import { format } from "date-fns";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 interface ScheduleAppointmentParams {
   title: string;
   startTime: Date;
@@ -66,57 +62,6 @@ export async function scheduleAppointment({
       type: "NEW_APPOINTMENT",
       appointment,
     });
-
-    // console.log("Patient email:", appointment.patient.email);
-
-    // Send email notification
-    // const emailResult = await resend.emails.send({
-    //   from: `${process.env.SENDER_EMAIL}`,
-    //   to: `${appointment.patient.email}`,
-    //   subject: "New Appointment Scheduled",
-    //   html: `
-    //     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
-    //       <div style="background-color: white; border-radius: 8px; padding: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-    //         <h1 style="color: #1e40af; margin-bottom: 24px; text-align: center;">New Appointment Scheduled</h1>
-
-    //         <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 16px; margin-bottom: 24px;">
-    //           <h2 style="color: #1e3a8a; margin: 0 0 8px 0;">${title}</h2>
-    //           <p style="color: #64748b; margin: 0;">Please review and respond to this appointment request.</p>
-    //         </div>
-
-    //         <div style="margin-bottom: 24px;">
-    //           <h3 style="color: #334155; margin-bottom: 12px;">Appointment Details:</h3>
-    //           <p style="margin: 4px 0;"><strong>Date:</strong> ${format(
-    //             startTime,
-    //             "PPP"
-    //           )}</p>
-    //           <p style="margin: 4px 0;"><strong>Time:</strong> ${format(
-    //             startTime,
-    //             "p"
-    //           )}</p>
-    //           ${
-    //             notes
-    //               ? `<p style="margin: 4px 0;"><strong>Notes:</strong> ${notes}</p>`
-    //               : ""
-    //           }
-    //         </div>
-
-    //         <div style="text-align: center;">
-    //           <a href="${process.env.NEXT_PUBLIC_APP_URL}/appointments"
-    //              style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-    //             View Appointment
-    //           </a>
-    //         </div>
-    //       </div>
-
-    //       <div style="text-align: center; margin-top: 24px; color: #64748b; font-size: 14px;">
-    //         <p>This is an automated message, please do not reply directly to this email.</p>
-    //       </div>
-    //     </div>
-    //   `,
-    // });
-
-    // console.log("Email sending result:", emailResult);
 
     return { success: true, appointment };
   } catch (error) {
