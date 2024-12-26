@@ -7,14 +7,11 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  webpack: (config, { dev }) => {
-    if (!dev) {
-      config.ignoreWarnings = [
-        {
-          message: /./, // Match all warnings
-        },
-      ];
-    }
+  webpack: (config) => {
+    config.ignoreWarnings = [
+      { module: /node_modules/ },
+      { file: /node_modules/ },
+    ];
     return config;
   },
 };
