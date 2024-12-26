@@ -283,7 +283,9 @@ export default function SalesPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(record)}>
+                        <DropdownMenuItem
+                          onClick={() => setEditingFinancialRecord(record)}
+                        >
                           <Pencil className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
@@ -315,13 +317,13 @@ export default function SalesPage() {
       />
       <EditPaymentModal
         payment={editingPayment}
-        open={!!editingPayment}
+        isOpen={!!editingPayment}
         onClose={() => setEditingPayment(null)}
         onUpdate={initializePage}
       />
       <EditFinancialRecordModal
         record={editingFinancialRecord}
-        open={!!editingFinancialRecord}
+        isOpen={!!editingFinancialRecord}
         onClose={() => setEditingFinancialRecord(null)}
         onUpdate={initializePage}
       />
