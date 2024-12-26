@@ -38,7 +38,7 @@ export default function PrescriptionList({ userRole }) {
 
   useEffect(() => {
     loadPrescriptions();
-  }, []);
+  }, [prescriptions]);
 
   const loadPrescriptions = async () => {
     const data = await getPrescriptions();

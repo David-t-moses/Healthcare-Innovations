@@ -41,7 +41,7 @@ export default function SalesPage() {
 
   useEffect(() => {
     initializePage();
-  }, []);
+  }, [salesData]);
 
   useEffect(() => {
     const fetchData = async () => {

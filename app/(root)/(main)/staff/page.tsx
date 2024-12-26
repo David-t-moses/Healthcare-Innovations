@@ -22,9 +22,8 @@ export default function StaffPage() {
 
   useEffect(() => {
     fetchStaffData();
-  }, []);
+  }, [staffList]);
 
-  
   const fetchStaffData = async () => {
     try {
       const { success, data, error } = await getStaffList();

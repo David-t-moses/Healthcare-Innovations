@@ -39,7 +39,7 @@ export default function MedicalRecordList({ userRole }) {
 
   useEffect(() => {
     loadRecords();
-  }, []);
+  }, [records]);
 
   const loadRecords = async () => {
     const data = await getMedicalRecords();

@@ -17,11 +17,9 @@ export default function PatientsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClientComponentClient();
 
-  // Simulated data fetching
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      // Simulate network request
       await new Promise((resolve) => setTimeout(resolve, 2000));
       setIsLoading(false);
     };
@@ -42,7 +40,6 @@ export default function PatientsPage() {
     }
   };
 
-  // Display loading spinner while isLoading is true
   if (isLoading) {
     return <LoadingSpinner message="Loading patients..." />;
   }
