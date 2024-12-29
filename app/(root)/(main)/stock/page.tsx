@@ -30,7 +30,7 @@ export default function StockPage() {
 
   useEffect(() => {
     fetchData();
-  }, [stockItems, vendors]);
+  }, [stockItems]);
 
   const handleDelete = async (id: string) => {
     if (activeTab === "items") {

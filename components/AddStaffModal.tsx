@@ -1,12 +1,13 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import { addStaffMember } from "@/lib/actions/staff.actions";
+import { useEffect, useState } from "react";
+import { addStaffMember, getStaffList } from "@/lib/actions/staff.actions";
 import { toast } from "sonner";
 
 export default function AddStaffModal({ isOpen, onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [staffList, setStaffList] = useState([]);
 
   const handleSubmit = async (e) => {
