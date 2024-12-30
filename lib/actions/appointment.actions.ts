@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { AppointmentStatus } from "@prisma/client";
 import { pusherServer } from "../pusher";
 import { format } from "date-fns";
+import { emitNotification } from "../socket";
 interface ScheduleAppointmentParams {
   title: string;
   startTime: Date;
@@ -20,13 +21,6 @@ export async function scheduleAppointment({
   notes,
   patientId,
   userId,
-}: {
-  title: string;
-  startTime: Date;
-  endTime: Date;
-  notes?: string;
-  patientId: string;
-  userId: string;
 }) {
   try {
     const appointment = await prisma.appointment.create({
@@ -44,8 +38,7 @@ export async function scheduleAppointment({
       },
     });
 
-    // Create notification for patient
-    await prisma.notification.create({
+    const notification = await prisma.notification.create({
       data: {
         userId: patientId,
         title: "New Appointment",
@@ -53,14 +46,14 @@ export async function scheduleAppointment({
           startTime,
           "PPP at p"
         )}`,
-        type: "APPOINTMENT_REQUEST", // Add this line
+        type: "APPOINTMENT_REQUEST",
       },
     });
 
-    // Trigger real-time update
-    await pusherServer.trigger(`user-${patientId}`, "new-notification", {
+    emitNotification(patientId, {
       type: "NEW_APPOINTMENT",
       appointment,
+      notification,
     });
 
     return { success: true, appointment };

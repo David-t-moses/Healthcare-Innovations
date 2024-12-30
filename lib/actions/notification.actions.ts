@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { pusherServer } from "@/lib/pusher";
+import { emitNotificationRead, emitAllNotificationsRead } from "../socket";
 
 export async function getNotifications(userId: string) {
   try {
@@ -27,13 +27,7 @@ export async function markNotificationAsRead(notificationId: string) {
       data: { read: true },
     });
 
-    // Trigger Pusher event to update UI
-    await pusherServer.trigger(
-      `user-${notification.userId}`,
-      "notification-read",
-      { notificationId }
-    );
-
+    emitNotificationRead(notification.userId, notificationId);
     return { success: true };
   } catch (error) {
     return { success: false };
@@ -50,9 +44,7 @@ export async function markAllNotificationsAsRead(userId: string) {
       data: { read: true },
     });
 
-    // Trigger Pusher event to update UI
-    await pusherServer.trigger(`user-${userId}`, "all-notifications-read", {});
-
+    emitAllNotificationsRead(userId);
     return { success: true };
   } catch (error) {
     return { success: false };

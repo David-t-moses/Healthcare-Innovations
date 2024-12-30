@@ -1,14 +1,17 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { pusherClient } from "@/lib/pusher";
+import { io } from "socket.io-client";
 import { getNotifications } from "@/lib/actions/notification.actions";
 
 interface NotificationContextType {
   unreadCount: number;
   notifications: any[];
   setNotifications: (notifications: any[]) => void;
+  updateNotificationState: (notificationId: string) => void;
 }
+
+const socket = io(process.env.NEXT_PUBLIC_APP_URL);
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined
@@ -34,7 +37,6 @@ export function NotificationProvider({
   const [notifications, setNotifications] = useState([]);
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // Add this function to update notification state after marking as read
   const updateNotificationState = (notificationId: string) => {
     setNotifications((prev) =>
       prev.map((notification) =>
@@ -46,34 +48,35 @@ export function NotificationProvider({
   };
 
   useEffect(() => {
-    const channel = pusherClient.subscribe(`user-${userId}`);
+    if (userId) {
+      socket.emit("join-user-room", userId);
 
-    channel.bind("all-notifications-read", () => {
-      setNotifications((prev) =>
-        prev.map((notification) => ({
-          ...notification,
-          read: true,
-        }))
-      );
-    });
+      socket.on("new-notification", (notification) => {
+        setNotifications((prev) => [notification, ...prev]);
+      });
 
-    channel.bind("new-notification", (notification: any) => {
-      setNotifications((prev) => [notification, ...prev]);
-    });
+      socket.on("notification-read", ({ notificationId }) => {
+        updateNotificationState(notificationId);
+      });
 
-    channel.bind("notification-read", ({ notificationId }) => {
-      updateNotificationState(notificationId);
-    });
+      socket.on("all-notifications-read", () => {
+        setNotifications((prev) =>
+          prev.map((notification) => ({ ...notification, read: true }))
+        );
+      });
 
-    getNotifications(userId).then(({ notifications }) => {
-      if (notifications) {
-        setNotifications(notifications);
-      }
-    });
+      // Initial fetch of notifications
+      getNotifications(userId).then((data) => {
+        if (data.success) {
+          setNotifications(data.notifications);
+        }
+      });
+    }
 
     return () => {
-      channel.unbind_all();
-      channel.unsubscribe();
+      socket.off("new-notification");
+      socket.off("notification-read");
+      socket.off("all-notifications-read");
     };
   }, [userId]);
 

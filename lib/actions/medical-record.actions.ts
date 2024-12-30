@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { pusherServer } from "@/lib/pusher";
-
+import { emitNotification } from "../socket";
 export async function getMedicalRecords() {
   const user = await getCurrentUser();
 
@@ -72,7 +72,6 @@ export async function createMedicalRecord(data: {
     },
   });
 
-  // Notify patient
   const notification = await prisma.notification.create({
     data: {
       userId: data.patientId,
@@ -82,11 +81,7 @@ export async function createMedicalRecord(data: {
     },
   });
 
-  await pusherServer.trigger(
-    `user-${data.patientId}`,
-    "new-notification",
-    notification
-  );
+  emitNotification(data.patientId, notification);
 
   return record;
 }
