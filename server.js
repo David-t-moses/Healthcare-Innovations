@@ -1,23 +1,11 @@
-import { createServer } from "http";
-import next from "next";
-import { Server } from "socket.io";
-
-// Enable garbage collection
-if (global.gc) {
-  global.gc();
-}
+const { createServer } = require("http");
+const next = require("next");
+const { Server } = require("socket.io");
 
 const port = process.env.PORT || 3000;
 const dev = process.env.NODE_ENV !== "production";
 
-// Optimize Next.js for production
-const nextApp = next({
-  dev,
-  conf: {
-    compress: true,
-    poweredByHeader: false,
-  },
-});
+const nextApp = next({ dev });
 const nextHandler = nextApp.getRequestHandler();
 
 nextApp
@@ -30,9 +18,6 @@ nextApp
     const io = new Server(server, {
       cors: { origin: "*", methods: ["GET", "POST"] },
       transports: ["websocket", "polling"],
-      pingTimeout: 60000,
-      pingInterval: 25000,
-      connectTimeout: 5000,
     });
 
     io.on("connection", (socket) => {
@@ -40,7 +25,6 @@ nextApp
 
       socket.on("disconnect", () => {
         console.log("Client disconnected:", socket.id);
-        socket.removeAllListeners();
       });
     });
 
