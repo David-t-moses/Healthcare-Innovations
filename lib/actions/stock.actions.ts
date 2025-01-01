@@ -181,7 +181,6 @@ export async function getRecentStock() {
         id: "desc",
       },
     });
-    console.log("Fetched stock:", stock);
     return stock;
   } catch (error) {
     console.log("Stock fetch error:", error);

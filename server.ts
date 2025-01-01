@@ -1,22 +1,52 @@
 import { createServer } from "http";
 import next from "next";
-import { initSocket } from "./lib/socket";
+import { Server } from "socket.io";
 
-const dev = process.env.NODE_ENV !== "production";
 const port = process.env.PORT || 3000;
+const dev = process.env.NODE_ENV !== "production";
 
-const app = next({ dev });
-const handle = app.getRequestHandler();
+const nextApp = next({ dev });
+const nextHandler = nextApp.getRequestHandler();
 
-app.prepare().then(() => {
-  const server = createServer((req, res) => {
-    handle(req, res);
+nextApp
+  .prepare()
+  .then(() => {
+    const server = createServer((req, res) => {
+      nextHandler(req, res);
+    });
+
+    const io = new Server(server, {
+      cors: {
+        origin: "*",
+        methods: ["GET", "POST"],
+      },
+      transports: ["websocket", "polling"],
+    });
+
+    io.on("connection", (socket) => {
+      console.log("Client connected:", socket.id);
+
+      socket.on("disconnect", () => {
+        console.log("Client disconnected:", socket.id);
+      });
+    });
+
+    server.listen(port, () => {
+      console.log(`> Server running on port ${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Error starting server:", err);
+    process.exit(1);
   });
 
-  // Initialize Socket.IO
-  initSocket(server);
+// Graceful shutdown handling
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, shutting down gracefully");
+  process.exit(0);
+});
 
-  server.listen(port, () => {
-    console.log(`> Ready on port ${port}`);
-  });
+process.on("SIGINT", () => {
+  console.log("SIGINT received, shutting down gracefully");
+  process.exit(0);
 });

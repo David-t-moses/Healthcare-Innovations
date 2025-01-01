@@ -79,7 +79,6 @@ export async function getActiveStaff() {
         lastUpdated: "desc",
       },
     });
-    console.log("Fetched staff:", staff);
     return staff;
   } catch (error) {
     console.log("Staff fetch error:", error);
