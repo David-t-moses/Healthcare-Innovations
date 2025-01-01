@@ -8,6 +8,9 @@ const dev = process.env.NODE_ENV !== "production";
 const nextApp = next({ dev });
 const nextHandler = nextApp.getRequestHandler();
 
+// Add this to make io globally available
+global.io = null;
+
 nextApp
   .prepare()
   .then(() => {
@@ -15,10 +18,14 @@ nextApp
       nextHandler(req, res);
     });
 
+    // Initialize Socket.IO and store it globally
     const io = new Server(server, {
       cors: { origin: "*", methods: ["GET", "POST"] },
       transports: ["websocket", "polling"],
     });
+
+    // Store io instance globally
+    global.io = io;
 
     io.on("connection", (socket) => {
       console.log("Client connected:", socket.id);
@@ -30,6 +37,7 @@ nextApp
 
     server.listen(port, () => {
       console.log(`> Server running on port ${port}`);
+      console.log("Socket.IO initialized successfully!");
     });
   })
   .catch((err) => {

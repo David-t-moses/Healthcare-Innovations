@@ -1,7 +1,6 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { pusherServer } from "@/lib/pusher";
 import { getCurrentUser } from "@/lib/auth";
 import { sendReorderEmail } from "../email";
 import { emitNotification } from "../socket";

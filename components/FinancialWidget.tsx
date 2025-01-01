@@ -39,6 +39,7 @@ export default function FinancialWidget() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClientComponentClient();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchFinancialData = async () => {
@@ -51,6 +52,7 @@ export default function FinancialWidget() {
 
         if (error) throw new Error(error.message);
         setFinancialData(data || []);
+        setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch data");
       } finally {
@@ -77,7 +79,18 @@ export default function FinancialWidget() {
   }, []);
 
   if (isLoading) {
-    return <div>Loading financial data...</div>;
+    return (
+      <div>
+        <div className="flex justify-between mb-4">
+          <div>
+            <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-2" />
+            <div className="h-10 w-48 bg-gray-200 rounded animate-pulse" />
+          </div>
+          <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
+        </div>
+        <div className="h-[300px] bg-gray-200 rounded animate-pulse" />
+      </div>
+    );
   }
 
   if (error) {
