@@ -19,13 +19,18 @@ export default function PrescriptionsPage() {
     fetchData();
   }, []);
 
+  const handlePrescriptionAdded = (newPrescription) => {};
+
   if (isLoading) {
     return <LoadingSpinner message="Loading prescriptions..." />;
   }
 
   return (
     <div className="container mx-auto py-6">
-      <PrescriptionList userRole={user?.role} />
+      <PrescriptionList
+        userRole={user?.role}
+        onPrescriptionAdded={handlePrescriptionAdded}
+      />
     </div>
   );
 }

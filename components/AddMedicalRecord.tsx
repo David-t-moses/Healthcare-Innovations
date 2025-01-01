@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createMedicalRecord } from "@/lib/actions/medical-record.actions";
 import { PatientSelect } from "./PatientSelect";
 
-export default function AddMedicalRecord({ open, onClose }) {
+export default function AddMedicalRecord({ open, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     patientId: "",
     diagnosis: "",
@@ -26,7 +26,8 @@ export default function AddMedicalRecord({ open, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await createMedicalRecord(formData);
+    const newRecord = await createMedicalRecord(formData);
+    if (onSuccess) onSuccess(newRecord);
     onClose();
   };
 

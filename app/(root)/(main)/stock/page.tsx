@@ -30,7 +30,7 @@ export default function StockPage() {
 
   useEffect(() => {
     fetchData();
-  }, [stockItems]);
+  }, []);
 
   const handleDelete = async (id: string) => {
     if (activeTab === "items") {
@@ -269,6 +269,10 @@ export default function StockPage() {
       <AddStockItemModal
         isOpen={isStockModalOpen}
         onClose={() => {
+          setStockModalOpen(false);
+        }}
+        onSuccess={(newItem) => {
+          setStockItems((prevItems) => [newItem, ...prevItems]);
           setStockModalOpen(false);
         }}
       />

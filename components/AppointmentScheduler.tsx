@@ -33,7 +33,6 @@ export default function AppointmentScheduler({
 
     setIsLoading(true);
     try {
-      // Create date objects for start and end time
       const startTime = new Date(selectedDate);
       const [hours, minutes] = selectedTime.split(":");
       startTime.setHours(parseInt(hours), parseInt(minutes));
@@ -52,7 +51,7 @@ export default function AppointmentScheduler({
 
       if (result.success) {
         toast.success("Appointment scheduled successfully");
-        // Reset form
+
         setTitle("");
         setSelectedDate(undefined);
         setSelectedTime("");

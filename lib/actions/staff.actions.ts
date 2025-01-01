@@ -70,3 +70,19 @@ export async function deleteStaff(staffId: string) {
     return { success: false, error: "Failed to delete staff member" };
   }
 }
+
+export async function getActiveStaff() {
+  try {
+    const staff = await prisma.staffStatus.findMany({
+      take: 3,
+      orderBy: {
+        lastUpdated: "desc",
+      },
+    });
+    console.log("Fetched staff:", staff);
+    return staff;
+  } catch (error) {
+    console.log("Staff fetch error:", error);
+    return [];
+  }
+}

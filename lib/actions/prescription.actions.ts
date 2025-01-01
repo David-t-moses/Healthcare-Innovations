@@ -1,8 +1,8 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { pusherServer } from "@/lib/pusher";
 import { getCurrentUser } from "@/lib/auth";
+import { emitNotification } from "@/lib/socket";
 
 export async function getPrescriptions() {
   const user = await getCurrentUser();
@@ -69,7 +69,6 @@ export async function createPrescription(data: {
     },
   });
 
-  // Notify patient
   const notification = await prisma.notification.create({
     data: {
       userId: data.patientId,
@@ -79,11 +78,11 @@ export async function createPrescription(data: {
     },
   });
 
-  await pusherServer.trigger(
-    `user-${data.patientId}`,
-    "new-notification",
-    notification
-  );
+  emitNotification(data.patientId, {
+    type: "PRESCRIPTIONS",
+    prescription,
+    notification,
+  });
 
   return prescription;
 }

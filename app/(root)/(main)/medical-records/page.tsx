@@ -19,13 +19,18 @@ export default function MedicalRecordsPage() {
     fetchUser();
   }, []);
 
+  const handleRecordAdded = (newRecord) => {};
+
   if (isLoading) {
     return <LoadingSpinner message="Loading Medical Records..." />;
   }
 
   return (
     <div className="container mx-auto py-6">
-      <MedicalRecordList userRole={user?.role} />
+      <MedicalRecordList
+        userRole={user?.role}
+        onRecordAdded={handleRecordAdded}
+      />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { createStockItem, getStockItems } from "@/lib/actions/stock.actions";
 import { getVendors } from "@/lib/actions/vendor.actions";
 
-export default function AddStockItemModal({ isOpen, onClose }) {
+export default function AddStockItemModal({ isOpen, onClose, onSuccess }) {
   const [vendors, setVendors] = useState([]);
   const [stockItems, setStockItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,7 +20,7 @@ export default function AddStockItemModal({ isOpen, onClose }) {
     e.preventDefault();
     const formData = new FormData(e.target);
 
-    await createStockItem({
+    const newItem = await createStockItem({
       name: formData.get("name") as string,
       quantity: Number(formData.get("quantity")),
       minimumQuantity: Number(formData.get("minimumQuantity")),
@@ -28,8 +28,9 @@ export default function AddStockItemModal({ isOpen, onClose }) {
       vendorId: formData.get("vendorId") as string,
       status: "IN_STOCK",
     });
+
+    if (onSuccess) onSuccess(newItem);
     onClose();
-    fetchData();
   };
 
   const fetchData = async () => {

@@ -172,3 +172,19 @@ export async function checkStockLevels() {
     }
   }
 }
+
+export async function getRecentStock() {
+  try {
+    const stock = await prisma.stockItem.findMany({
+      take: 3,
+      orderBy: {
+        id: "desc",
+      },
+    });
+    console.log("Fetched stock:", stock);
+    return stock;
+  } catch (error) {
+    console.log("Stock fetch error:", error);
+    return [];
+  }
+}

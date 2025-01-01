@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma";
 import { AppointmentStatus } from "@prisma/client";
-import { pusherServer } from "../pusher";
 import { format } from "date-fns";
 import { emitNotification } from "../socket";
 interface ScheduleAppointmentParams {
@@ -68,11 +67,11 @@ export async function respondToAppointment({ appointmentId, status }) {
     const appointment = await prisma.appointment.update({
       where: { id: appointmentId },
       data: { status },
-      include: { user: true }, // Include staff details
+      include: { user: true },
     });
 
-    // Create notification for staff
-    await prisma.notification.create({
+    // Create notification in database
+    const notification = await prisma.notification.create({
       data: {
         userId: appointment.userId,
         title: "Appointment Response",
@@ -81,15 +80,12 @@ export async function respondToAppointment({ appointmentId, status }) {
       },
     });
 
-    // Trigger real-time update via Pusher
-    await pusherServer.trigger(
-      `user-${appointment.userId}`,
-      "new-notification",
-      {
-        type: "APPOINTMENT_RESPONSE",
-        appointment,
-      }
-    );
+    // Emit real-time notification using Socket.IO
+    emitNotification(appointment.userId, {
+      type: "APPOINTMENT_RESPONSE",
+      appointment,
+      notification,
+    });
 
     return { success: true };
   } catch (error) {

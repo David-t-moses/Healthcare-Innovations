@@ -326,8 +326,13 @@ export default function DashboardLayout({
           )}
           {activeModal === "prescription" && (
             <AddPrescriptionModal
-              open={true}
+              open={activeModal === "prescription"}
               onClose={() => setActiveModal(null)}
+              onSuccess={async (newPrescription) => {
+                setActiveModal(null);
+                router.refresh();
+                router.push(pathname);
+              }}
             />
           )}
           {activeModal === "finances" && (
@@ -336,10 +341,15 @@ export default function DashboardLayout({
               onClose={() => setActiveModal(null)}
             />
           )}
-          {activeModal === "medical-record" && (
-            <AddMedicalRecord
-              open={true}
+          {activeModal === "prescription" && (
+            <AddPrescriptionModal
+              open={activeModal === "prescription"}
               onClose={() => setActiveModal(null)}
+              onSuccess={async (newPrescription) => {
+                setActiveModal(null);
+                router.refresh();
+                router.push(pathname);
+              }}
             />
           )}
           {activeModal === "staff" && (
@@ -349,6 +359,11 @@ export default function DashboardLayout({
             <AddStockItemModal
               isOpen={true}
               onClose={() => setActiveModal(null)}
+              onSuccess={async (newStockItem) => {
+                setActiveModal(null);
+                router.refresh();
+                router.push(pathname);
+              }}
             />
           )}
         </main>

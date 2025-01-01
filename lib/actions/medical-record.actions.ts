@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { pusherServer } from "@/lib/pusher";
 import { emitNotification } from "../socket";
 export async function getMedicalRecords() {
   const user = await getCurrentUser();

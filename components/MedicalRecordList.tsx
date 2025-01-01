@@ -31,7 +31,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import AddMedicalRecord from "./AddMedicalRecord";
 
-export default function MedicalRecordList({ userRole }) {
+interface Props {
+  onRecordAdded?: (newRecord: any) => void;
+}
+
+export default function MedicalRecordList({ userRole, onRecordAdded }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [records, setRecords] = useState([]);
@@ -40,12 +44,17 @@ export default function MedicalRecordList({ userRole }) {
 
   useEffect(() => {
     loadRecords();
-  }, [records]);
+  }, []);
 
   const loadRecords = async () => {
     const data = await getMedicalRecords();
     setRecords(data);
     setIsLoading(false);
+  };
+
+  const handleAddRecord = async (newRecord) => {
+    setRecords((prevRecords) => [newRecord, ...prevRecords]);
+    if (onRecordAdded) onRecordAdded(newRecord);
   };
 
   return (
@@ -197,7 +206,8 @@ export default function MedicalRecordList({ userRole }) {
                   <div className="text-sm text-gray-500 space-y-1">
                     <p className="flex items-center gap-2">
                       <User className="h-3 w-3" />
-                      Recorded by: {record.recordedBy.fullName}
+                      Recorded by:{" "}
+                      {record.recordedBy?.fullName || "Unknown Staff"}
                     </p>
                     <p className="flex items-center gap-2">
                       <CalendarDays className="h-3 w-3" />
@@ -235,10 +245,8 @@ export default function MedicalRecordList({ userRole }) {
       )}
       <AddMedicalRecord
         open={showAddModal}
-        onClose={() => {
-          setShowAddModal(false);
-          loadRecords();
-        }}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={handleAddRecord}
       />
       <EditMedicalRecordModal
         record={editingRecord}

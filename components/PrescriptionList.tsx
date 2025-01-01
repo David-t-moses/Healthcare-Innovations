@@ -29,7 +29,10 @@ import {
   Trash2,
 } from "lucide-react";
 
-export default function PrescriptionList({ userRole }) {
+interface Props {
+  onPrescriptionAdded?: (newPrescription: any) => void;
+}
+export default function PrescriptionList({ userRole, onPrescriptionAdded }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [prescriptions, setPrescriptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,12 +41,20 @@ export default function PrescriptionList({ userRole }) {
 
   useEffect(() => {
     loadPrescriptions();
-  }, [prescriptions]);
+  }, []);
 
   const loadPrescriptions = async () => {
     const data = await getPrescriptions();
     setPrescriptions(data);
     setIsLoading(false);
+  };
+
+  const handleAddPrescription = async (newPrescription) => {
+    setPrescriptions((prevPrescriptions) => [
+      newPrescription,
+      ...prevPrescriptions,
+    ]);
+    if (onPrescriptionAdded) onPrescriptionAdded(newPrescription);
   };
 
   return (
@@ -189,7 +200,8 @@ export default function PrescriptionList({ userRole }) {
                 <div className="pt-4 border-t text-sm text-gray-500 space-y-1">
                   <p className="flex items-center gap-2">
                     <User className="h-3 w-3" />
-                    Prescribed by: {prescription.prescribedBy.fullName}
+                    Prescribed by:{" "}
+                    {prescription.prescribedBy?.fullName || "Unknown Staff"}
                   </p>
                   <p className="flex items-center gap-2">
                     <CalendarDays className="h-3 w-3" />
@@ -203,10 +215,8 @@ export default function PrescriptionList({ userRole }) {
       )}
       <AddPrescriptionModal
         open={showAddModal}
-        onClose={() => {
-          setShowAddModal(false);
-          loadPrescriptions();
-        }}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={handleAddPrescription}
       />
       <EditPrescriptionModal
         prescription={editingPrescription}

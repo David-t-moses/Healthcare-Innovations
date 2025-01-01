@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createPrescription } from "@/lib/actions/prescription.actions";
 import { PatientSelect } from "./PatientSelect";
 
-export default function AddPrescriptionModal({ open, onClose }) {
+export default function AddPrescriptionModal({ open, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     patientId: "",
     medication: "",
@@ -25,7 +25,8 @@ export default function AddPrescriptionModal({ open, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await createPrescription(formData);
+    const newPrescription = await createPrescription(formData);
+    if (onSuccess) onSuccess(newPrescription);
     onClose();
   };
 

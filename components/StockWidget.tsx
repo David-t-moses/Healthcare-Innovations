@@ -1,35 +1,41 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getRecentStock } from "@/lib/actions/stock.actions";
 
 export default function StockWidget() {
   const [stock, setStock] = useState([]);
-  const supabase = createClientComponentClient();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStock = async () => {
-      const { data } = await supabase.from("StockItem").select("*");
-
-      setStock(data);
+      const stockData = await getRecentStock();
+      setStock(stockData);
+      setLoading(false);
     };
-
-    const channel = supabase
-      .channel("stock_items")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "stock_items" },
-        (payload) => {
-          fetchStock();
-        }
-      )
-      .subscribe();
 
     fetchStock();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    const interval = setInterval(fetchStock, 60000);
+    return () => clearInterval(interval);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((index) => (
+          <div key={index} className="p-3 bg-gray-50 rounded-lg animate-pulse">
+            <div className="flex justify-between items-center">
+              <div className="space-y-2">
+                <div className="h-4 w-32 bg-gray-200 rounded" />
+                <div className="h-3 w-20 bg-gray-200 rounded" />
+              </div>
+              <div className="h-6 w-16 bg-gray-200 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

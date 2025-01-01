@@ -1,35 +1,42 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getActiveStaff } from "@/lib/actions/staff.actions";
 
 export default function StaffOverview() {
   const [staff, setStaff] = useState([]);
-  const supabase = createClientComponentClient();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStaffStatus = async () => {
-      const { data } = await supabase.from("StaffStatus").select("*");
-
-      setStaff(data);
+      const staffData = await getActiveStaff();
+      setStaff(staffData);
+      setLoading(false);
     };
-
-    const channel = supabase
-      .channel("staff_status")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "staff_status" },
-        (payload) => {
-          fetchStaffStatus();
-        }
-      )
-      .subscribe();
 
     fetchStaffStatus();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Refresh every minute to keep data current
+    const interval = setInterval(fetchStaffStatus, 60000);
+    return () => clearInterval(interval);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((index) => (
+          <div key={index} className="p-3 bg-gray-50 rounded-lg animate-pulse">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gray-200 rounded-full" />
+              <div className="space-y-2">
+                <div className="h-4 w-24 bg-gray-200 rounded" />
+                <div className="h-3 w-16 bg-gray-200 rounded" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
