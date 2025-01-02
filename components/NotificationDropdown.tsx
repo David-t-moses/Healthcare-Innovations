@@ -8,9 +8,11 @@ import {
 } from "@/lib/actions/notification.actions";
 import { motion } from "framer-motion";
 import { Bell } from "lucide-react";
+import { useNotifications } from "./NotificationContext";
 
 export default function NotificationDropdown({ notifications, onClose }) {
   const router = useRouter();
+  const { updateNotificationState } = useNotifications();
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export default function NotificationDropdown({ notifications, onClose }) {
   }, [onClose]);
 
   const handleNotificationClick = async (notification) => {
+    updateNotificationState(notification.id);
     await markNotificationAsRead(notification.id);
 
     if (notification.type === "STOCK_LOW") {
@@ -50,6 +53,7 @@ export default function NotificationDropdown({ notifications, onClose }) {
   };
 
   const handleMarkAllAsRead = async () => {
+    notifications.forEach(n => updateNotificationState(n.id));
     await markAllNotificationsAsRead(notifications[0]?.userId);
   };
 

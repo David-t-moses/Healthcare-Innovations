@@ -35,6 +35,7 @@ export function NotificationProvider({
   userId: string;
 }) {
   const [notifications, setNotifications] = useState([]);
+  const [socket, setSocket] = useState(null);
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const updateNotificationState = (notificationId: string) => {
@@ -48,35 +49,44 @@ export function NotificationProvider({
   };
 
   useEffect(() => {
+    // Initialize socket once
+    const newSocket = io(process.env.NEXT_PUBLIC_APP_URL, {
+      reconnection: true,
+      reconnectionAttempts: 5,
+    });
+    setSocket(newSocket);
+
     if (userId) {
-      socket.emit("join-user-room", userId);
+      newSocket.emit("join-user-room", userId);
 
-      socket.on("new-notification", (notification) => {
-        setNotifications((prev) => [notification, ...prev]);
-      });
-
-      socket.on("notification-read", ({ notificationId }) => {
-        updateNotificationState(notificationId);
-      });
-
-      socket.on("all-notifications-read", () => {
-        setNotifications((prev) =>
-          prev.map((notification) => ({ ...notification, read: true }))
-        );
-      });
-
-      // Initial fetch of notifications
+      // Fetch initial notifications
       getNotifications(userId).then((data) => {
         if (data.success) {
           setNotifications(data.notifications);
         }
       });
+
+      // Socket event handlers
+      newSocket.on("new-notification", (notification) => {
+        console.log("New notification received:", notification);
+        setNotifications((prev) => [notification, ...prev]);
+      });
+
+      newSocket.on("notification-read", ({ notificationId }) => {
+        updateNotificationState(notificationId);
+      });
+
+      newSocket.on("all-notifications-read", () => {
+        setNotifications((prev) =>
+          prev.map((notification) => ({ ...notification, read: true }))
+        );
+      });
     }
 
     return () => {
-      socket.off("new-notification");
-      socket.off("notification-read");
-      socket.off("all-notifications-read");
+      if (newSocket) {
+        newSocket.disconnect();
+      }
     };
   }, [userId]);
 

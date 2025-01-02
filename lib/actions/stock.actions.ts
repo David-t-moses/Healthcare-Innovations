@@ -10,18 +10,24 @@ async function notifyAllStaff(title: string, message: string, type: string) {
     where: { role: "STAFF" },
   });
 
-  for (const staff of staffUsers) {
-    const notification = await prisma.notification.create({
-      data: {
-        userId: staff.id,
-        title,
-        message,
-        type,
-      },
-    });
+  const notifications = await Promise.all(
+    staffUsers.map(async (staff) => {
+      const notification = await prisma.notification.create({
+        data: {
+          userId: staff.id,
+          title,
+          message,
+          type,
+        },
+      });
 
-    emitNotification(staff.id, notification);
-  }
+      // Emit immediately to each staff member
+      emitNotification(staff.id, notification);
+      return notification;
+    })
+  );
+
+  return notifications;
 }
 
 export async function createStockItem(data: {
@@ -92,7 +98,6 @@ export async function updateStockItem(id: string, data: any) {
 
 export async function reorderStock(stockItemId: string) {
   const user = await getCurrentUser();
-
   const stockItem = await prisma.stockItem.findUnique({
     where: { id: stockItemId },
     include: { vendor: true },
@@ -117,10 +122,25 @@ export async function reorderStock(stockItemId: string) {
     },
   });
 
-  await notifyAllStaff(
-    "Stock Reorder Placed",
-    `Reorder placed for ${stockItem.name} (${stockItem.reorderQuantity} units)`,
-    "GENERAL"
+  // Get all staff users
+  const staffUsers = await prisma.user.findMany({
+    where: { role: "STAFF" },
+  });
+
+  // Create and emit notifications in parallel
+  await Promise.all(
+    staffUsers.map(async (staff) => {
+      const notification = await prisma.notification.create({
+        data: {
+          userId: staff.id,
+          title: "Stock Reorder Placed",
+          message: `Reorder placed for ${stockItem.name} (${stockItem.reorderQuantity} units)`,
+          type: "GENERAL",
+        },
+      });
+
+      emitNotification(staff.id, notification);
+    })
   );
 
   sendReorderEmail(stockItem);

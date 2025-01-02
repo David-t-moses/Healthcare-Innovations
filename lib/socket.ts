@@ -36,6 +36,7 @@ export function getIO() {
 
 export function emitNotification(userId: string, notification: any) {
   getIO().to(`user-${userId}`).emit("new-notification", notification);
+  console.log(`Emitting notification to user ${userId}:`, notification);
 }
 
 export function emitNotificationRead(userId: string, notificationId: string) {
