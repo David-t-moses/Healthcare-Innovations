@@ -2,8 +2,11 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { updateStockItem } from "@/lib/actions/stock.actions";
+import { useNotifications } from "./NotificationContext";
 
 export default function EditStockItemModal({ isOpen, onClose, item, vendors }) {
+  const { refreshNotifications } = useNotifications();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -15,10 +18,8 @@ export default function EditStockItemModal({ isOpen, onClose, item, vendors }) {
       reorderQuantity: Number(formData.get("reorderQuantity")), // Make sure this is included
       vendorId: formData.get("vendorId"),
     };
-
-    console.log("Edit Modal Update Data:", updateData);
-
     await updateStockItem(item.id, updateData);
+    await refreshNotifications();
     onClose();
   };
 

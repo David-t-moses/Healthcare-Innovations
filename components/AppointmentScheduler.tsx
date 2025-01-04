@@ -69,7 +69,7 @@ export default function AppointmentScheduler({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 bg-gray-100 p-10 rounded-md shadow-md"
+      className="space-y-6 bg-gray-100 p-10 rounded-md shadow-md w-full max-w-[400px] mx-auto"
     >
       <div>
         <label className="block text-sm font-medium mb-2">Title</label>
@@ -81,15 +81,20 @@ export default function AppointmentScheduler({
         />
       </div>
 
-      <div>
+      <div className="calendar-wrapper">
         <label className="block text-sm font-medium mb-2">Date</label>
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={setSelectedDate}
-          disabled={(date) => date < new Date()}
-          className="rounded-md border"
-        />
+        <div className="bg-white rounded-md border p-0 flex justify-center items-center">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            disabled={(date) => date < new Date()}
+            className="w-full"
+            initialFocus
+            fixedWeeks
+            weekStartsOn={0}
+          />
+        </div>
       </div>
 
       <div>

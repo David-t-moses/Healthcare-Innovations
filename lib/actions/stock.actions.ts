@@ -10,24 +10,21 @@ async function notifyAllStaff(title: string, message: string, type: string) {
     where: { role: "STAFF" },
   });
 
-  const notifications = await Promise.all(
-    staffUsers.map(async (staff) => {
-      const notification = await prisma.notification.create({
-        data: {
-          userId: staff.id,
-          title,
-          message,
-          type,
-        },
-      });
+  console.log("Notifying staff users:", staffUsers);
 
-      // Emit immediately to each staff member
-      emitNotification(staff.id, notification);
-      return notification;
-    })
-  );
+  for (const staff of staffUsers) {
+    const notification = await prisma.notification.create({
+      data: {
+        userId: staff.id,
+        title,
+        message,
+        type,
+      },
+    });
 
-  return notifications;
+    console.log("Emitting notification:", notification);
+    emitNotification(staff.id, notification);
+  }
 }
 
 export async function createStockItem(data: {

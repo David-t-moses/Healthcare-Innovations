@@ -11,15 +11,20 @@ export function initSocket(server: any) {
         origin: process.env.NEXT_PUBLIC_APP_URL,
         methods: ["GET", "POST"],
       },
+      pingTimeout: 60000,
+      pingInterval: 25000,
     });
-
-    console.log("Socket.IO initialized successfully!");
 
     global.io.on("connection", (socket) => {
       console.log("New client connected");
+
       socket.on("join-user-room", (userId) => {
         socket.join(`user-${userId}`);
         console.log(`User ${userId} joined their room`);
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Client disconnected");
       });
     });
   }

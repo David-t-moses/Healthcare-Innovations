@@ -26,8 +26,8 @@ export default function StaffPage() {
 
   const fetchStaffData = async () => {
     const { success, data, error } = await getStaffList();
-
     setStaffList(data);
+    setIsLoading(false);
   };
 
   const handleAddStaff = () => {

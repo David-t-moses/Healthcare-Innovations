@@ -107,13 +107,13 @@ export default function ScheduleAppointmentPage() {
         ) : (
           <div>
             <div className="flex items-center gap-4 mb-8">
-              <Button
+              {/* <Button
                 variant="outline"
                 onClick={() => setSelectedPatient(null)}
                 className="flex items-center gap-2"
               >
                 ← Back to patients
-              </Button>
+              </Button> */}
               <h2 className="text-2xl font-semibold">
                 Schedule for {selectedPatient.name}
               </h2>

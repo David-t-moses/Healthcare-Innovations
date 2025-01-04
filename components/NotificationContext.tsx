@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { io } from "socket.io-client";
 import { getNotifications } from "@/lib/actions/notification.actions";
 
@@ -9,9 +15,8 @@ interface NotificationContextType {
   notifications: any[];
   setNotifications: (notifications: any[]) => void;
   updateNotificationState: (notificationId: string) => void;
+  refreshNotifications: () => Promise<void>;
 }
-
-const socket = io(process.env.NEXT_PUBLIC_APP_URL);
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined
@@ -38,7 +43,7 @@ export function NotificationProvider({
   const [socket, setSocket] = useState(null);
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const updateNotificationState = (notificationId: string) => {
+  const updateNotificationState = useCallback((notificationId: string) => {
     setNotifications((prev) =>
       prev.map((notification) =>
         notification.id === notificationId
@@ -46,59 +51,63 @@ export function NotificationProvider({
           : notification
       )
     );
-  };
+  }, []);
 
   useEffect(() => {
-    // Initialize socket once
-    const newSocket = io(process.env.NEXT_PUBLIC_APP_URL, {
-      reconnection: true,
-      reconnectionAttempts: 5,
-    });
+    const fetchNotifications = async () => {
+      const data = await getNotifications(userId);
+      if (data.success) {
+        setNotifications(data.notifications);
+      }
+    };
+    fetchNotifications();
+
+    const interval = setInterval(fetchNotifications, 30000);
+
+    return () => clearInterval(interval);
+  }, [userId]);
+
+  useEffect(() => {
+    const newSocket = io(process.env.NEXT_PUBLIC_APP_URL);
     setSocket(newSocket);
 
-    if (userId) {
+    newSocket.on("connect", () => {
+      console.log("Socket connected");
       newSocket.emit("join-user-room", userId);
+    });
 
-      // Fetch initial notifications
+    newSocket.on("new-notification", (notification) => {
+      console.log("New notification received:", notification);
+
       getNotifications(userId).then((data) => {
         if (data.success) {
           setNotifications(data.notifications);
         }
       });
-
-      // Socket event handlers
-      newSocket.on("new-notification", (notification) => {
-        console.log("New notification received:", notification);
-        setNotifications((prev) => [notification, ...prev]);
-      });
-
-      newSocket.on("notification-read", ({ notificationId }) => {
-        updateNotificationState(notificationId);
-      });
-
-      newSocket.on("all-notifications-read", () => {
-        setNotifications((prev) =>
-          prev.map((notification) => ({ ...notification, read: true }))
-        );
-      });
-    }
+    });
 
     return () => {
-      if (newSocket) {
-        newSocket.disconnect();
-      }
+      newSocket.disconnect();
     };
   }, [userId]);
 
+  const refreshNotifications = useCallback(async () => {
+    const data = await getNotifications(userId);
+    if (data.success) {
+      setNotifications(data.notifications);
+    }
+  }, [userId]);
+
+  const value = {
+    notifications,
+    setNotifications,
+    unreadCount,
+    updateNotificationState,
+    refreshNotifications,
+  };
+
   return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        setNotifications,
-        unreadCount,
-        updateNotificationState,
-      }}
-    >
+    <NotificationContext.Provider value={value}>
       {children}
     </NotificationContext.Provider>
   );

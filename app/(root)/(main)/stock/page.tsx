@@ -15,7 +15,7 @@ import {
   reorderStock,
 } from "@/lib/actions/stock.actions";
 import { deleteVendor } from "@/lib/actions/vendor.actions";
-import { toast } from "sonner";
+import ReorderStockButton from "@/components/ReorderStockButton";
 
 export default function StockPage() {
   const [activeTab, setActiveTab] = useState("items");
@@ -26,7 +26,6 @@ export default function StockPage() {
   const [editItem, setEditItem] = useState(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isReordering, setIsReordering] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -58,18 +57,6 @@ export default function StockPage() {
     } else {
       setVendorModalOpen(true);
     }
-  };
-
-  const handleReorder = async (itemId: string) => {
-    setIsReordering(itemId);
-    const result = await reorderStock(itemId);
-    if (result.success) {
-      toast.success("Stock reordered successfully");
-    } else {
-      toast.error("Reorder Failed, Try again later");
-    }
-    setIsReordering(null);
-    fetchData();
   };
 
   if (isLoading) {
@@ -147,24 +134,11 @@ export default function StockPage() {
               />
             </div>
             {item.quantity <= item.minimumQuantity && (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleReorder(item.id)}
-                disabled={isReordering === item.id}
-                className="w-full py-2 bg-blue-600 text-white rounded-lg font-medium flex items-center justify-center gap-2"
-              >
-                {isReordering === item.id ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <span>Reorder Stock</span>
-                    <span className="text-sm">
-                      ({item.reorderQuantity} units)
-                    </span>
-                  </>
-                )}
-              </motion.button>
+              <ReorderStockButton
+                itemId={item.id}
+                reorderQuantity={item.reorderQuantity}
+                onReorderComplete={fetchData}
+              />
             )}
           </div>
         )}
