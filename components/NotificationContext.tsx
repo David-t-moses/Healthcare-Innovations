@@ -72,18 +72,23 @@ export function NotificationProvider({
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
-      console.log("Socket connected");
       newSocket.emit("join-user-room", userId);
     });
 
     newSocket.on("new-notification", (notification) => {
-      console.log("New notification received:", notification);
-
       getNotifications(userId).then((data) => {
         if (data.success) {
           setNotifications(data.notifications);
         }
       });
+    });
+
+    newSocket.on("notification-deleted", (notificationId) => {
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+    });
+
+    newSocket.on("notifications-cleared", (userId) => {
+      setNotifications((prev) => prev.filter((n) => n.userId !== userId));
     });
 
     return () => {

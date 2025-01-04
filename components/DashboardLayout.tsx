@@ -293,16 +293,15 @@ export default function DashboardLayout({
                       />
                     )}
                   </div>
-                  {userRole === "STAFF" && (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      onClick={handleSettingsRoute}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
-                    >
-                      <AiOutlineSetting className="w-5 h-5 text-gray-600" />
-                    </motion.button>
-                  )}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    onClick={handleSettingsRoute}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                  >
+                    <AiOutlineSetting className="w-5 h-5 text-gray-600" />
+                  </motion.button>
+
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     className="flex items-center space-x-2 bg-blue-600 text-white rounded-lg px-4 py-2 cursor-pointer"

@@ -50,3 +50,25 @@ export async function markAllNotificationsAsRead(userId: string) {
     return { success: false };
   }
 }
+
+export async function deleteNotification(notificationId: string) {
+  try {
+    await prisma.notification.delete({
+      where: { id: notificationId },
+    });
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to delete notification" };
+  }
+}
+
+export async function deleteAllNotifications(userId: string) {
+  try {
+    await prisma.notification.deleteMany({
+      where: { userId },
+    });
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to delete all notifications" };
+  }
+}
