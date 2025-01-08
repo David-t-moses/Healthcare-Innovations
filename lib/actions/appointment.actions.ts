@@ -4,14 +4,6 @@ import prisma from "@/lib/prisma";
 import { AppointmentStatus } from "@prisma/client";
 import { format } from "date-fns";
 import { emitNotification } from "../socket";
-interface ScheduleAppointmentParams {
-  title: string;
-  startTime: Date;
-  endTime: Date;
-  notes?: string;
-  patientId: string;
-  userId: string;
-}
 
 export async function scheduleAppointment({
   title,
@@ -70,7 +62,6 @@ export async function respondToAppointment({ appointmentId, status }) {
       include: { user: true },
     });
 
-    // Create notification in database
     const notification = await prisma.notification.create({
       data: {
         userId: appointment.userId,
@@ -80,7 +71,6 @@ export async function respondToAppointment({ appointmentId, status }) {
       },
     });
 
-    // Emit real-time notification using Socket.IO
     emitNotification(appointment.userId, {
       type: "APPOINTMENT_RESPONSE",
       appointment,
@@ -98,7 +88,6 @@ export async function getAppointments(
   role: "PATIENT" | "STAFF"
 ) {
   try {
-    // For patients: only show their appointments
     if (role === "PATIENT") {
       const appointments = await prisma.appointment.findMany({
         where: {
@@ -118,7 +107,6 @@ export async function getAppointments(
       return { success: true, appointments };
     }
 
-    // For staff: show all appointments they created
     const appointments = await prisma.appointment.findMany({
       where: {
         userId: userId,

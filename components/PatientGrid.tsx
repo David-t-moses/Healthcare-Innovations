@@ -106,14 +106,14 @@ export default function PatientGrid({ onDeletePatient }) {
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button
+            {/* <Button
               variant="outline"
               className="flex-1"
               onClick={() => router.push(`/patients/details/${patient.id}`)}
             >
               <User className="w-4 h-4 mr-2" />
               Details
-            </Button>
+            </Button> */}
             <Button
               variant="outline"
               className="flex-1"

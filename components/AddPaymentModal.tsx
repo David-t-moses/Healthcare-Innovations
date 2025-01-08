@@ -7,7 +7,19 @@ import { createPayment, getSalesData } from "@/lib/actions/sales.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 const supabase = createClientComponentClient();
 
-export default function AddPaymentModal({ isOpen, onClose, patients }) {
+interface AddPaymentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: (data: any) => void;
+  patients?: any[];
+}
+
+export default function AddPaymentModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  patients,
+}: AddPaymentModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [salesData, setSalesData] = useState({
     payments: [],
@@ -45,6 +57,9 @@ export default function AddPaymentModal({ isOpen, onClose, patients }) {
       if (result.success) {
         toast.success("Payment recorded successfully");
         fetchSalesData();
+        if (onSuccess) {
+          onSuccess(result.data);
+        }
         onClose();
       } else {
         toast.error(result.error);
@@ -81,7 +96,7 @@ export default function AddPaymentModal({ isOpen, onClose, patients }) {
                   required
                 >
                   <option value="">Select Patient</option>
-                  {patients.map((patient) => (
+                  {patients?.map((patient) => (
                     <option key={patient.id} value={patient.id}>
                       {patient.name}
                     </option>

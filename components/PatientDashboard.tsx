@@ -22,7 +22,6 @@ export default function PatientDashboard({ userId, searchTerm }) {
 
   useEffect(() => {
     const loadDashboardData = async () => {
-      // Fetch patient-specific appointments
       const { appointments } = await getAppointments(userId, "PATIENT");
 
       const upcoming = appointments
@@ -55,7 +54,6 @@ export default function PatientDashboard({ userId, searchTerm }) {
           records.dosage.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setRecentRecords(filteredRecords);
-
     };
 
     loadDashboardData();

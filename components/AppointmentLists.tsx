@@ -13,7 +13,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { AppointmentStatus } from "@prisma/client";
 import AppointmentResponse from "./AppointmentResponse";
-import EditAppointmentModal from "./EditAppointmentModal";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
@@ -38,7 +37,6 @@ export default function AppointmentsList({
 }: AppointmentsListProps) {
   const [editingAppointment, setEditingAppointment] = useState(null);
 
-  // Sort appointments by date, most recent first
   const sortedAppointments = [...appointments].sort(
     (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
   );
@@ -173,12 +171,6 @@ export default function AppointmentsList({
           </TableBody>
         </Table>
       </div>
-      <EditAppointmentModal
-        appointment={editingAppointment}
-        open={!!editingAppointment}
-        onClose={() => setEditingAppointment(null)}
-        onUpdate={() => router.refresh()}
-      />
     </div>
   );
 }

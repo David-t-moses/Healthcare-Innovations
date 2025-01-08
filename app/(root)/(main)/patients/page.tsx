@@ -5,17 +5,17 @@ import PatientList from "@/components/PatientList";
 import PatientGrid from "@/components/PatientGrid";
 import AddPatientModal from "@/components/AddPatientModal";
 import PatientAnalytics from "@/components/PatientAnalytics";
-import LoadingSpinner from "@/components/LoadingSpinner"; // Import the LoadingSpinner component
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PatientsPage() {
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClientComponentClient();
+  const [patients, setPatients] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,6 +26,11 @@ export default function PatientsPage() {
 
     fetchData();
   }, []);
+
+  const handlePatientAdded = (newPatient) => {
+    setPatients((prev) => [newPatient, ...prev]);
+    setIsAddModalOpen(false);
+  };
 
   const handleDeletePatient = async (patientId: string) => {
     const { error } = await supabase
@@ -83,6 +88,7 @@ export default function PatientsPage() {
       <AddPatientModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        onSuccess={handlePatientAdded}
       />
     </div>
   );

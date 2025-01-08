@@ -195,7 +195,7 @@ export default function PatientList({ onDeletePatient }: PatientListProps) {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button
+                      {/* <Button
                         variant="outline"
                         size="sm"
                         onClick={() =>
@@ -205,7 +205,7 @@ export default function PatientList({ onDeletePatient }: PatientListProps) {
                       >
                         <User className="h-4 w-4 mr-2" />
                         Details
-                      </Button>
+                      </Button> */}
                       <Button
                         variant="outline"
                         size="sm"

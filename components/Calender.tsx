@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Calendar as BigCalendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay, addMinutes } from "date-fns";
 import { enUS } from "date-fns/locale/en-US";
@@ -14,10 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PatientSelect } from "@/components/PatientSelect";
-import {
-  scheduleAppointment,
-  getAppointments,
-} from "@/lib/actions/appointment.actions";
+import { scheduleAppointment } from "@/lib/actions/appointment.actions";
 import { toast } from "sonner";
 
 const locales = {

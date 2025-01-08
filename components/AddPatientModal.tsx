@@ -1,22 +1,18 @@
 "use client";
 
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
+import Button from "./Button";
 
 interface AddPatientModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: (patient: PatientFormData) => void;
 }
 
 interface PatientFormData {
@@ -33,6 +29,7 @@ interface PatientFormData {
 export default function AddPatientModal({
   isOpen,
   onClose,
+  onSuccess,
 }: AddPatientModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<PatientFormData>({
@@ -52,7 +49,6 @@ export default function AddPatientModal({
     setIsLoading(true);
 
     try {
-      // Create patient data with UUID
       const patientData = {
         id: crypto.randomUUID(),
         name: formData.name,
@@ -66,19 +62,16 @@ export default function AddPatientModal({
         status: formData.status,
       };
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("Patient")
         .insert([patientData])
         .select();
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
 
-      // Success handling
       toast.success("Patient added successfully!");
+      onSuccess(data[0]);
 
-      // Reset form
       setFormData({
         name: "",
         email: "",
@@ -88,9 +81,6 @@ export default function AddPatientModal({
         emergencyContact: "",
         status: "active",
       });
-
-      // Close modal
-      onClose();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to add patient";
@@ -102,94 +92,118 @@ export default function AddPatientModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add New Patient</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={formData.phone || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="dateOfBirth">Date of Birth</Label>
-              <Input
-                id="dateOfBirth"
-                type="date"
-                value={formData.dateOfBirth || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, dateOfBirth: e.target.value })
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="insurance">Insurance Details</Label>
-              <Input
-                id="insurance"
-                value={formData.insurance || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, insurance: e.target.value })
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="emergencyContact">Emergency Contact</Label>
-              <Input
-                id="emergencyContact"
-                value={formData.emergencyContact || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, emergencyContact: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={onClose} type="button">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                "Add Patient"
-              )}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        >
+          <motion.div
+            initial={{ scale: 0.95 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0.95 }}
+            className="bg-white rounded-lg p-6 w-full max-w-md"
+          >
+            <h2 className="text-2xl font-bold mb-6">Add New Patient</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <label className="block text-sm font-medium">Full Name</label>
+                  <input
+                    className="w-full p-2 border rounded-lg"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label className="block text-sm font-medium">Email</label>
+                  <input
+                    type="email"
+                    className="w-full p-2 border rounded-lg"
+                    value={formData.email || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Input
+                    id="dateOfBirth"
+                    type="date"
+                    value={formData.dateOfBirth || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, dateOfBirth: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="insurance">Insurance Details</Label>
+                  <Input
+                    id="insurance"
+                    value={formData.insurance || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, insurance: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="emergencyContact">Emergency Contact</Label>
+                  <Input
+                    id="emergencyContact"
+                    value={formData.emergencyContact || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        emergencyContact: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 bg-gray-100 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    "Add Patient"
+                  )}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

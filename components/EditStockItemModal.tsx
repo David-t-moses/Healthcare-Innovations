@@ -15,7 +15,7 @@ export default function EditStockItemModal({ isOpen, onClose, item, vendors }) {
       name: formData.get("name"),
       quantity: Number(formData.get("quantity")),
       minimumQuantity: Number(formData.get("minimumQuantity")),
-      reorderQuantity: Number(formData.get("reorderQuantity")), // Make sure this is included
+      reorderQuantity: Number(formData.get("reorderQuantity")),
       vendorId: formData.get("vendorId"),
     };
     await updateStockItem(item.id, updateData);

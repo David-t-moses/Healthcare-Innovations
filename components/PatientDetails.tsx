@@ -5,7 +5,7 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { BackButton } from "./BackButton";
 
 interface PatientDetailsProps {
@@ -22,7 +22,7 @@ export default function PatientDetails({ patientId }: PatientDetailsProps) {
   useEffect(() => {
     const fetchPatientData = async () => {
       const { data: patientData } = await supabase
-        .from("Patient") // Changed from "patients"
+        .from("Patient")
         .select(
           `
     id,

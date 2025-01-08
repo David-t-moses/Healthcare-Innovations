@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import {
   AiOutlinePlus,
   AiOutlineBell,
-  AiOutlineMessage,
   AiOutlineDashboard,
   AiOutlineUser,
   AiOutlineCalendar,
@@ -27,6 +26,15 @@ import AddStockItemModal from "./AddStockItemModal";
 import AddFinancialRecordModal from "./AddFinancialRecordModal";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { SearchContext } from "./SearchContext";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import AddPaymentModal from "./AddPaymentModal";
+import { getPatients } from "@/lib/actions/sales.actions";
 import AddMedicalRecord from "./AddMedicalRecord";
 
 export const staffNavigationItems = [
@@ -132,10 +140,34 @@ export default function DashboardLayout({
   const { unreadCount, notifications } = useNotifications();
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
-
+  const [patients, setPatients] = useState([]);
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await getCurrentUser();
+      if (user?.fullName) {
+        setFirstName(user.fullName.split(" ")[0]);
+        setUserRole(user.role);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      if (activeModal === "payment") {
+        const { success, data } = await getPatients();
+        if (success) {
+          setPatients(data);
+        }
+      }
+    };
+
+    fetchPatients();
+  }, [activeModal]);
 
   const handleSettingsRoute = () => {
     router.push("/settings");
@@ -178,16 +210,67 @@ export default function DashboardLayout({
     }
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const user = await getCurrentUser();
-      if (user?.fullName) {
-        setFirstName(user.fullName.split(" ")[0]);
-        setUserRole(user.role);
-      }
-    };
-    fetchUser();
-  }, []);
+  const handleQuickAdd = (type: string) => {
+    setActiveModal(type);
+  };
+
+  const handleModalSuccess = (data: any, type: string) => {
+    setActiveModal(null);
+    toast.success(`${type} added successfully`);
+
+    // Redirect to respective pages
+    switch (type) {
+      case "patient":
+        router.push("/patients");
+        break;
+      case "stock":
+        router.push("/stock");
+        break;
+      case "payment":
+        router.push("/finances");
+        break;
+    }
+  };
+
+  const renderAddButton = () => {
+    if (pathname === "/dashboard") {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
+            >
+              <AiOutlinePlus className="w-5 h-5" />
+            </motion.button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => handleQuickAdd("patient")}>
+              Add Patient
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleQuickAdd("stock")}>
+              Add Stock Item
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleQuickAdd("payment")}>
+              Record Payment
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    }
+
+    return (
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={handleAddButton}
+        className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
+      >
+        <AiOutlinePlus className="w-5 h-5" />
+      </motion.button>
+    );
+  };
 
   const navigationItems = useMemo(() => {
     return userRole === "PATIENT"
@@ -249,16 +332,7 @@ export default function DashboardLayout({
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
                 <div className="flex items-center space-x-2 order-2 sm:order-1">
-                  {userRole === "STAFF" && (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleAddButton}
-                      className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
-                    >
-                      <AiOutlinePlus className="w-5 h-5" />
-                    </motion.button>
-                  )}
+                  {userRole === "STAFF" && renderAddButton()}
 
                   <div className="relative hidden md:block">
                     <input
@@ -321,6 +395,23 @@ export default function DashboardLayout({
             <AddPatientModal
               isOpen={true}
               onClose={() => setActiveModal(null)}
+              onSuccess={(data) => handleModalSuccess(data, "patient")}
+            />
+          )}
+          {activeModal === "stock" && (
+            <AddStockItemModal
+              isOpen={true}
+              onClose={() => setActiveModal(null)}
+              onSuccess={(data) => handleModalSuccess(data, "stock")}
+            />
+          )}
+
+          {activeModal === "payment" && (
+            <AddPaymentModal
+              isOpen={true}
+              onClose={() => setActiveModal(null)}
+              onSuccess={(data) => handleModalSuccess(data, "payment")}
+              patients={patients}
             />
           )}
           {activeModal === "prescription" && (
@@ -354,15 +445,11 @@ export default function DashboardLayout({
           {activeModal === "staff" && (
             <AddStaffModal isOpen={true} onClose={() => setActiveModal(null)} />
           )}
-          {activeModal === "stock" && (
-            <AddStockItemModal
-              isOpen={true}
+          {activeModal === "medical-record" && (
+            <AddMedicalRecord
+              open={true}
               onClose={() => setActiveModal(null)}
-              onSuccess={async (newStockItem) => {
-                setActiveModal(null);
-                router.refresh();
-                router.push(pathname);
-              }}
+              onSuccess={(data) => handleModalSuccess(data, "medical-record")}
             />
           )}
         </main>
