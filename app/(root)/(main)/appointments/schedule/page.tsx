@@ -8,6 +8,42 @@ import { getCurrentUser } from "@/lib/auth";
 import { getPatients } from "@/lib/actions/sales.actions";
 import { motion } from "framer-motion";
 import { Search, UserPlus, Calendar } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+const ScheduleAppointmentSkeleton = () => (
+  <div className="container mx-auto py-8 px-4">
+    <div className="max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+        <Skeleton className="h-10 w-48 mb-4 md:mb-0 bg-white" />
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative mb-6">
+        <Skeleton className="h-10 w-full rounded-lg" />
+      </div>
+
+      {/* Patient Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array(6)
+          .fill(0)
+          .map((_, i) => (
+            <div
+              key={i}
+              className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+            >
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-6 w-6 rounded" />
+              </div>
+            </div>
+          ))}
+      </div>
+    </div>
+  </div>
+);
 
 export default function ScheduleAppointmentPage() {
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -39,6 +75,10 @@ export default function ScheduleAppointmentPage() {
   const filteredPatients = patients.filter((patient) =>
     patient.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (isLoading) {
+    return <ScheduleAppointmentSkeleton />;
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -106,18 +146,9 @@ export default function ScheduleAppointmentPage() {
           </>
         ) : (
           <div>
-            <div className="flex items-center gap-4 mb-8">
-              {/* <Button
-                variant="outline"
-                onClick={() => setSelectedPatient(null)}
-                className="flex items-center gap-2"
-              >
-                ← Back to patients
-              </Button> */}
-              <h2 className="text-2xl font-semibold">
-                Schedule for {selectedPatient.name}
-              </h2>
-            </div>
+            <h2 className="font-bold text-3xl text-center mb-4">
+              Schedule for {selectedPatient.name}
+            </h2>
 
             <AppointmentScheduler
               patientId={selectedPatient.id}

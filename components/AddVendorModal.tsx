@@ -1,11 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createVendor } from "@/lib/actions/vendor.actions";
 
 export default function AddVendorModal({ isOpen, onClose }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const formData = new FormData(e.target);
 
     await createVendor({
@@ -14,6 +18,7 @@ export default function AddVendorModal({ isOpen, onClose }) {
       phone: formData.get("phone") as string,
       address: formData.get("address") as string,
     });
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -79,9 +84,10 @@ export default function AddVendorModal({ isOpen, onClose }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Add Vendor
+                  {isSubmitting ? "Adding vendor.." : "Add Vendor"}
                 </button>
               </div>
             </form>

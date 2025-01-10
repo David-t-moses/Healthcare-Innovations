@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { addStaffMember, getStaffList } from "@/lib/actions/staff.actions";
 import { toast } from "sonner";
 
-export default function AddStaffModal({ isOpen, onClose }) {
+export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [staffList, setStaffList] = useState([]);
@@ -26,6 +26,7 @@ export default function AddStaffModal({ isOpen, onClose }) {
       if (result.success) {
         toast.success("Staff member added successfully");
         fetchStaffData();
+        onSuccess(result.data);
         onClose();
       } else {
         toast.error(result.error);
@@ -34,7 +35,6 @@ export default function AddStaffModal({ isOpen, onClose }) {
       setIsSubmitting(false);
     }
   };
-
   const fetchStaffData = async () => {
     try {
       const { success, data, error } = await getStaffList();
@@ -114,11 +114,7 @@ export default function AddStaffModal({ isOpen, onClose }) {
                   disabled={isSubmitting}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
                 >
-                  {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
-                  ) : (
-                    "Add Staff Member"
-                  )}
+                  {isSubmitting ? "Adding Staff.." : "Add Staff"}
                 </button>
               </div>
             </form>

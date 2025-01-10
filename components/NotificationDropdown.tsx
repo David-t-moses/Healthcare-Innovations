@@ -90,7 +90,7 @@ export default function NotificationDropdown({ notifications, onClose }) {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="absolute right-0 sm:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-white rounded-xl shadow-2xl z-50 border border-gray-100 overflow-hidden transform -translate-x-1/2 left-1/2 sm:transform-none sm:left-auto"
+      className="absolute right-4 sm:right-2/5 mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-white rounded-xl shadow-2xl z-50 border border-gray-100 overflow-hidden"
     >
       <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white flex justify-between items-center">
         <h3 className="font-semibold text-lg">Notifications</h3>

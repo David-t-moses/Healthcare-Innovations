@@ -4,54 +4,60 @@ import prisma from "@/lib/prisma";
 import { AppointmentStatus } from "@prisma/client";
 import { format } from "date-fns";
 import { emitNotification } from "../socket";
+import { cache } from "react";
 
-export async function scheduleAppointment({
-  title,
-  startTime,
-  endTime,
-  notes,
-  patientId,
-  userId,
-}) {
-  try {
-    const appointment = await prisma.appointment.create({
-      data: {
-        title,
-        startTime,
-        endTime,
-        notes,
-        patientId,
-        userId,
-        status: AppointmentStatus.PENDING,
-      },
-      include: {
-        patient: true,
-      },
-    });
+export async function scheduleAppointment(data) {
+  // Check if the patient exists as a user
+  const patientUser = await prisma.user.findFirst({
+    where: {
+      id: data.patientId,
+      role: "PATIENT",
+    },
+  });
 
-    const notification = await prisma.notification.create({
-      data: {
-        userId: patientId,
-        title: "New Appointment",
-        message: `You have a new appointment scheduled for ${format(
-          startTime,
-          "PPP at p"
-        )}`,
-        type: "APPOINTMENT_REQUEST",
-      },
-    });
+  if (!patientUser) {
+    return {
+      success: false,
+      error:
+        "This patient does not have an account. They need to register first before appointments can be scheduled.",
+    };
+  }
 
-    emitNotification(patientId, {
+  return prisma.$transaction(async (tx) => {
+    const [appointment, notification] = await Promise.all([
+      tx.appointment.create({
+        data: {
+          title: data.title,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          notes: data.notes,
+          patientId: data.patientId,
+          userId: data.userId,
+          status: AppointmentStatus.PENDING,
+        },
+        include: { patient: true },
+      }),
+      tx.notification.create({
+        data: {
+          userId: data.patientId,
+          title: "New Appointment",
+          message: `You have a new appointment scheduled for ${format(
+            data.startTime,
+            "PPP at p"
+          )}`,
+          type: "APPOINTMENT_REQUEST",
+        },
+      }),
+    ]);
+
+    emitNotification(data.patientId, {
       type: "NEW_APPOINTMENT",
       appointment,
       notification,
     });
 
     return { success: true, appointment };
-  } catch (error) {
-    console.error("Error scheduling appointment:", error);
-    return { success: false, error: "Failed to schedule appointment" };
-  }
+  });
 }
 
 export async function respondToAppointment({ appointmentId, status }) {
@@ -83,51 +89,47 @@ export async function respondToAppointment({ appointmentId, status }) {
   }
 }
 
-export async function getAppointments(
-  userId: string,
-  role: "PATIENT" | "STAFF"
-) {
-  try {
+export const getAppointments = cache(
+  async (userId: string, role: "PATIENT" | "STAFF") => {
+    const baseQuery = {
+      orderBy: { startTime: "desc" },
+      select: {
+        id: true,
+        title: true,
+        startTime: true,
+        endTime: true,
+        status: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    };
+
     if (role === "PATIENT") {
-      const appointments = await prisma.appointment.findMany({
-        where: {
-          patientId: userId,
-        },
-        include: {
+      return prisma.appointment.findMany({
+        ...baseQuery,
+        where: { patientId: userId },
+        select: {
+          ...baseQuery.select,
           user: {
-            select: {
-              fullName: true,
-            },
+            select: { fullName: true },
           },
-        },
-        orderBy: {
-          startTime: "desc",
         },
       });
-      return { success: true, appointments };
     }
 
-    const appointments = await prisma.appointment.findMany({
-      where: {
-        userId: userId,
-      },
-      include: {
+    return prisma.appointment.findMany({
+      ...baseQuery,
+      where: { userId },
+      select: {
+        ...baseQuery.select,
         patient: {
-          select: {
-            name: true,
-          },
+          select: { name: true },
         },
       },
-      orderBy: {
-        startTime: "desc",
-      },
     });
-    return { success: true, appointments };
-  } catch (error) {
-    console.error("Error fetching appointments:", error);
-    return { success: false, error: "Failed to fetch appointments" };
   }
-}
+);
 
 export async function deleteAppointment(appointmentId: string) {
   try {
@@ -145,7 +147,10 @@ export async function deleteAppointment(appointmentId: string) {
     });
     return { success: true, appointment };
   } catch (error) {
-    return { success: false, error: "Failed to delete appointment" };
+    return {
+      success: false,
+      error: "Failed to delete appointment, Please try again.",
+    };
   }
 }
 
@@ -165,6 +170,9 @@ export async function updateAppointment(
     });
     return { success: true, appointment };
   } catch (error) {
-    return { success: false, error: "Failed to update appointment" };
+    return {
+      success: false,
+      error: "Failed to update appointment, Please try again",
+    };
   }
 }

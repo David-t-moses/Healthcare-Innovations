@@ -36,6 +36,7 @@ import {
 import AddPaymentModal from "./AddPaymentModal";
 import { getPatients } from "@/lib/actions/sales.actions";
 import AddMedicalRecord from "./AddMedicalRecord";
+import { DashboardLayoutSkeleton } from "./SkeletonLayout";
 
 export const staffNavigationItems = [
   {
@@ -142,16 +143,20 @@ export default function DashboardLayout({
   const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
   const [patients, setPatients] = useState([]);
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
 
   const router = useRouter();
 
   useEffect(() => {
     const fetchUser = async () => {
+      setIsLoading(true);
       const user = await getCurrentUser();
       if (user?.fullName) {
         setFirstName(user.fullName.split(" ")[0]);
         setUserRole(user.role);
       }
+      setIsLoading(false);
     };
     fetchUser();
   }, []);
@@ -168,6 +173,29 @@ export default function DashboardLayout({
 
     fetchPatients();
   }, [activeModal]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1280) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    // Initial check
+    handleResize();
+
+    // Add event listener
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!isSidebarOpen);
+  };
 
   const handleSettingsRoute = () => {
     router.push("/settings");
@@ -187,29 +215,6 @@ export default function DashboardLayout({
     router.replace(`${pathname}?${params.toString()}`);
   };
 
-  const handleAddButton = () => {
-    switch (currentPageTitle) {
-      case "Patients":
-        setActiveModal("patient");
-        break;
-      case "Prescriptions":
-        setActiveModal("prescription");
-        break;
-      case "Sales and Finances":
-        setActiveModal("finances");
-        break;
-      case "Medical History":
-        setActiveModal("medical-record");
-        break;
-      case "Staff List":
-        setActiveModal("staff");
-        break;
-      case "Stock":
-        setActiveModal("stock");
-        break;
-    }
-  };
-
   const handleQuickAdd = (type: string) => {
     setActiveModal(type);
   };
@@ -218,7 +223,6 @@ export default function DashboardLayout({
     setActiveModal(null);
     toast.success(`${type} added successfully`);
 
-    // Redirect to respective pages
     switch (type) {
       case "patient":
         router.push("/patients");
@@ -229,46 +233,53 @@ export default function DashboardLayout({
       case "payment":
         router.push("/finances");
         break;
+      case "prescription":
+        router.push("/prescriptions");
+        break;
+      case "staff":
+        router.push("/staff");
+        break;
+      case "medical-record":
+        router.push("/medical-records");
+        break;
+      case "finances":
+        router.push("/finances");
+        break;
     }
   };
 
   const renderAddButton = () => {
-    if (pathname === "/dashboard") {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
-            >
-              <AiOutlinePlus className="w-5 h-5" />
-            </motion.button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => handleQuickAdd("patient")}>
-              Add Patient
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleQuickAdd("stock")}>
-              Add Stock Item
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleQuickAdd("payment")}>
-              Record Payment
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    }
-
     return (
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={handleAddButton}
-        className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
-      >
-        <AiOutlinePlus className="w-5 h-5" />
-      </motion.button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
+          >
+            <AiOutlinePlus className="w-5 h-5" />
+          </motion.button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          {[
+            { label: "Add Patient", action: "patient" },
+            { label: "Add Stock Item", action: "stock" },
+            { label: "Record Payment", action: "payment" },
+            { label: "Add Prescription", action: "prescription" },
+            { label: "Add Staff", action: "staff" },
+            { label: "Add Medical Record", action: "medical-record" },
+            { label: "Add Financial Record", action: "finances" },
+          ].map((item) => (
+            <DropdownMenuItem
+              key={item.action}
+              onClick={() => handleQuickAdd(item.action)}
+              className="hover:!bg-blue-600 hover:!text-white transition-colors focus:!bg-blue-600 focus:!text-white"
+            >
+              {item.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   };
 
@@ -283,11 +294,16 @@ export default function DashboardLayout({
     return currentRoute?.label || "Pharma";
   }, [pathname, navigationItems]);
 
+  if (isLoading) {
+    return <DashboardLayoutSkeleton />;
+  }
+
   return (
     <SearchContext.Provider value={{ searchTerm, setSearchTerm }}>
-      <div className="flex w-full">
+      <div className="relative flex w-full">
         <Sidebar
           isSidebarOpen={isSidebarOpen}
+          toggleSidebar={toggleSidebar}
           navigationItems={navigationItems}
         />
 
@@ -296,18 +312,18 @@ export default function DashboardLayout({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-10"
+            className="fixed inset-0 bg-black bg-opacity-50 xl:hidden z-10"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
-        <main className="flex-1 lg:ml-72">
+        <main className="flex-1 w-full xl:ml-72">
           <header className="bg-gray-100 shadow-md sticky top-0 z-10">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-4 space-y-4 sm:space-y-0">
-              {/* Header content */}
-              <div className="flex items-center space-x-4 w-full sm:w-auto">
+            {/* Main Header Row */}
+            <div className="flex items-center justify-between px-4 py-4">
+              <div className="flex items-center space-x-4">
                 <button
-                  className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"
+                  className="p-2 rounded-lg hover:bg-gray-100 xl:hidden"
                   onClick={() => setSidebarOpen(!isSidebarOpen)}
                 >
                   <svg
@@ -330,28 +346,28 @@ export default function DashboardLayout({
                 </h2>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-                <div className="flex items-center space-x-2 order-2 sm:order-1">
+              {/* Desktop View */}
+              <div className="hidden md:flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
                   {userRole === "STAFF" && renderAddButton()}
-
-                  <div className="relative hidden md:block">
+                  <div className="relative">
                     <input
                       type="text"
                       value={searchTerm}
                       onChange={handleSearch}
                       placeholder={`Search ${currentPageTitle.toLowerCase()}...`}
-                      className="w-full sm:w-64 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-64 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end space-x-3 order-1 sm:order-2">
-                  <div className="relative">
+                <div className="flex items-center space-x-3">
+                  <div>
                     <motion.button
                       onClick={() => setShowNotifications(!showNotifications)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                      className=" relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
                     >
                       <AiOutlineBell className="w-5 h-5 text-gray-600" />
                       {unreadCount > 0 && (
@@ -375,22 +391,107 @@ export default function DashboardLayout({
                   >
                     <AiOutlineSetting className="w-5 h-5 text-gray-600" />
                   </motion.button>
-
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     className="flex items-center space-x-2 bg-blue-600 text-white rounded-lg px-4 py-2 cursor-pointer"
                   >
                     <AiOutlineUser className="w-5 h-5" />
-                    <span className="font-medium hidden sm:inline">
-                      {firstName}
-                    </span>
+                    <span className="font-medium">{firstName}</span>
                   </motion.div>
                 </div>
               </div>
+
+              {/* Mobile Expand Button */}
+              <button
+                onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+                className="md:hidden"
+              >
+                <motion.div
+                  animate={{ rotate: isHeaderExpanded ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </motion.div>
+              </button>
             </div>
+
+            {/* Mobile Expandable Content */}
+            <motion.div
+              initial={false}
+              animate={{
+                height: isHeaderExpanded ? "auto" : 0,
+                opacity: isHeaderExpanded ? 1 : 0,
+              }}
+              className="md:hidden overflow-hidden"
+            >
+              <div className="px-4 pb-4 space-y-4">
+                <div className="flex items-center space-x-2">
+                  {userRole === "STAFF" && renderAddButton()}
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    placeholder={`Search ${currentPageTitle.toLowerCase()}...`}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end space-x-3">
+                  <div>
+                    <motion.button
+                      onClick={() => setShowNotifications(!showNotifications)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                    >
+                      <AiOutlineBell className="w-5 h-5 text-gray-600" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </motion.button>
+                    {showNotifications && (
+                      <NotificationDropdown
+                        notifications={notifications}
+                        onClose={() => setShowNotifications(false)}
+                      />
+                    )}
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    onClick={handleSettingsRoute}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                  >
+                    <AiOutlineSetting className="w-5 h-5 text-gray-600" />
+                  </motion.button>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="flex items-center space-x-2 bg-blue-600 text-white rounded-lg px-4 py-2 cursor-pointer"
+                  >
+                    <AiOutlineUser className="w-5 h-5" />
+                    <span className="font-medium">{firstName}</span>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
           </header>
 
-          <div className="p-4 sm:p-6">{children}</div>
+          <div className="p-4 sm:p-6 w-full">{children}</div>
           {activeModal === "patient" && (
             <AddPatientModal
               isOpen={true}
@@ -416,40 +517,33 @@ export default function DashboardLayout({
           )}
           {activeModal === "prescription" && (
             <AddPrescriptionModal
-              open={activeModal === "prescription"}
+              open={true}
               onClose={() => setActiveModal(null)}
-              onSuccess={async (newPrescription) => {
-                setActiveModal(null);
-                router.refresh();
-                router.push(pathname);
-              }}
+              onSuccess={(data) => handleModalSuccess(data, "prescription")}
             />
           )}
+
           {activeModal === "finances" && (
             <AddFinancialRecordModal
               isOpen={true}
               onClose={() => setActiveModal(null)}
+              onSuccess={(data) => handleModalSuccess(data, "finances")}
             />
           )}
-          {activeModal === "prescription" && (
-            <AddPrescriptionModal
-              open={activeModal === "prescription"}
-              onClose={() => setActiveModal(null)}
-              onSuccess={async (newPrescription) => {
-                setActiveModal(null);
-                router.refresh();
-                router.push(pathname);
-              }}
-            />
-          )}
+
           {activeModal === "staff" && (
-            <AddStaffModal isOpen={true} onClose={() => setActiveModal(null)} />
+            <AddStaffModal
+              isOpen={true}
+              onClose={() => setActiveModal(null)}
+              onSuccess={(data) => handleModalSuccess(data, "staff")}
+            />
           )}
+
           {activeModal === "medical-record" && (
             <AddMedicalRecord
               open={true}
               onClose={() => setActiveModal(null)}
-              onSuccess={(data) => handleModalSuccess(data, "medical-record")}
+              onSuccess={(data) => handleModalSuccess(data, "medical record")}
             />
           )}
         </main>

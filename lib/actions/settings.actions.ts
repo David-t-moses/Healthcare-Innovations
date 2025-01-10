@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { hash, compare } from "bcryptjs";
+import { cache } from "react";
 
 type ProfileUpdateData = {
   fullName: string;
@@ -66,23 +67,19 @@ export async function updateProfile(data: ProfileUpdateData) {
   }
 }
 
-export async function getUserSettings(userId: string) {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        fullName: true,
-        email: true,
-        role: true,
-        note: true,
-      },
-    });
-    return { success: true, data: user };
-  } catch (error) {
-    return { success: false, error: "Failed to fetch user settings" };
-  }
-}
+export const getUserSettings = cache(async (userId: string) => {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      role: true,
+      note: true,
+      notificationPreferences: true,
+    },
+  });
+});
 
 export async function updatePassword(data: {
   currentPassword: string;

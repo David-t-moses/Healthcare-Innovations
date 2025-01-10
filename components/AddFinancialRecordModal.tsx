@@ -3,26 +3,21 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
-import { createFinancialRecord } from "@/lib/actions/sales.actions";
+import {
+  createFinancialRecord,
+  getSalesData,
+} from "@/lib/actions/sales.actions";
 
 export default function AddFinancialRecordModal({
   isOpen,
   onClose,
+  onSuccess,
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [salesData, setSalesData] = useState({
     payments: [],
     financialRecords: [],
   });
-
-  const fetchSalesData = async () => {
-    const { success, data, error } = await getSalesData();
-    if (success) {
-      setSalesData(data);
-    } else {
-      toast.error(error);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,11 +33,13 @@ export default function AddFinancialRecordModal({
 
       if (result.success) {
         toast.success("Financial record added successfully");
-        fetchSalesData();
+        if (onSuccess) await onSuccess();
         onClose();
       } else {
         toast.error(result.error);
       }
+    } catch (error) {
+      toast.error("Failed to add financial record");
     } finally {
       setIsSubmitting(false);
     }
@@ -117,13 +114,9 @@ export default function AddFinancialRecordModal({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
-                  ) : (
-                    "Add Record"
-                  )}
+                  {isSubmitting ? "Adding Record..." : "Add Record"}
                 </button>
               </div>
             </form>

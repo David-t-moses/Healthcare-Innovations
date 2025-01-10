@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Calendar as BigCalendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay, addMinutes } from "date-fns";
 import { enUS } from "date-fns/locale/en-US";
@@ -31,77 +32,29 @@ const localizer = dateFnsLocalizer({
 
 export default function Calendar({ userId }: any) {
   const [events, setEvents] = useState([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [selectedPatient, setSelectedPatient] = useState("");
-  const [notes, setNotes] = useState("");
+  const router = useRouter();
 
   const handleSelectSlot = (slotInfo) => {
-    setSelectedSlot(slotInfo);
-    setIsDialogOpen(true);
-  };
-
-  const handleSchedule = async () => {
-    if (!selectedPatient || !selectedSlot) return;
-
-    const appointmentData = {
-      title: "Medical Appointment",
-      startTime: selectedSlot.start,
-      endTime: addMinutes(selectedSlot.start, 30),
-      notes,
-      patientId: selectedPatient,
-      userId: userId,
-    };
-
-    console.log("Scheduling appointment with data:", appointmentData);
-
-    const result = await scheduleAppointment(appointmentData);
-
-    if (result.success) {
-      toast.success("Appointment scheduled successfully");
-
-      setIsDialogOpen(false);
-      setSelectedSlot(null);
-      setSelectedPatient("");
-      setNotes("");
-    } else {
-      toast.error("Failed to schedule appointment");
-    }
+    const selectedDate = new Date(slotInfo.start);
+    const formattedDate = selectedDate.toISOString().split("T")[0];
+    router.push(`/appointments/schedule?date=${formattedDate}`);
   };
 
   return (
-    <>
-      <div className="h-[600px]">
-        <BigCalendar
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: "100%" }}
-          selectable
-          onSelectSlot={handleSelectSlot}
-        />
-      </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Schedule Appointment</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <PatientSelect
-              value={selectedPatient}
-              onChange={setSelectedPatient}
-            />
-            <Textarea
-              placeholder="Appointment notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-            <Button onClick={handleSchedule}>Schedule Appointment</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+    <div className="h-[600px]">
+      <BigCalendar
+        localizer={localizer}
+        events={events}
+        startAccessor="start"
+        endAccessor="end"
+        style={{ height: "100%" }}
+        selectable
+        onSelectSlot={handleSelectSlot}
+        onNavigate={(date) => {
+          const formattedDate = new Date(date).toISOString().split("T")[0];
+          router.push(`/appointment/schedule?date=${formattedDate}`);
+        }}
+      />
+    </div>
   );
 }

@@ -1,14 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { updateStockItem } from "@/lib/actions/stock.actions";
 import { useNotifications } from "./NotificationContext";
 
 export default function EditStockItemModal({ isOpen, onClose, item, vendors }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { refreshNotifications } = useNotifications();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const formData = new FormData(e.target);
 
     const updateData = {
@@ -20,6 +23,7 @@ export default function EditStockItemModal({ isOpen, onClose, item, vendors }) {
     };
     await updateStockItem(item.id, updateData);
     await refreshNotifications();
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -110,9 +114,12 @@ export default function EditStockItemModal({ isOpen, onClose, item, vendors }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Update
+                  {isSubmitting
+                    ? "Updating Stock Item..."
+                    : "Update Stock Item"}
                 </button>
               </div>
             </form>

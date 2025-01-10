@@ -21,19 +21,6 @@ export default function AddPaymentModal({
   patients,
 }: AddPaymentModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [salesData, setSalesData] = useState({
-    payments: [],
-    financialRecords: [],
-  });
-
-  const fetchSalesData = async () => {
-    const { success, data, error } = await getSalesData();
-    if (success) {
-      setSalesData(data);
-    } else {
-      toast.error(error);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,14 +43,13 @@ export default function AddPaymentModal({
 
       if (result.success) {
         toast.success("Payment recorded successfully");
-        fetchSalesData();
-        if (onSuccess) {
-          onSuccess(result.data);
-        }
+        if (onSuccess) await onSuccess();
         onClose();
       } else {
         toast.error(result.error);
       }
+    } catch (error) {
+      toast.error("Failed to record payment");
     } finally {
       setIsSubmitting(false);
     }
@@ -154,13 +140,9 @@ export default function AddPaymentModal({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
-                  ) : (
-                    "Record Payment"
-                  )}
+                  {isSubmitting ? <>Recording Payment...</> : "Record Payment"}
                 </button>
               </div>
             </form>

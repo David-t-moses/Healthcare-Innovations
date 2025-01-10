@@ -1,11 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { updateVendor } from "@/lib/actions/vendor.actions";
 
 export default function EditVendorModal({ isOpen, onClose, vendor }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const formData = new FormData(e.target);
 
     await updateVendor(vendor.id, {
@@ -14,6 +18,7 @@ export default function EditVendorModal({ isOpen, onClose, vendor }) {
       phone: formData.get("phone") as string,
       address: formData.get("address") as string,
     });
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -83,9 +88,10 @@ export default function EditVendorModal({ isOpen, onClose, vendor }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Update
+                  {isSubmitting ? "Updating vendor.." : "Update vendor"}
                 </button>
               </div>
             </form>

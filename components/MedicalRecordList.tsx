@@ -67,7 +67,7 @@ export default function MedicalRecordList({ userRole, onRecordAdded }) {
             className="flex items-center gap-2"
           >
             <PlusCircle className="h-4 w-4" />
-            Add Medical Record
+            <span className="hidden md:block">Add Medical Record</span>
           </Button>
         )}
       </div>

@@ -31,7 +31,7 @@ export default function VerifyEmail() {
         setTimeout(() => router.push("/dashboard"), 2000);
       } else {
         setStatus("error");
-        setMessage(result.error || "Verification failed");
+        setMessage(result.error || "Verification failed, Please try again.");
       }
     });
   }, [searchParams, router]);

@@ -9,6 +9,7 @@ export default function AddStockItemModal({ isOpen, onClose, onSuccess }) {
   const [vendors, setVendors] = useState([]);
   const [stockItems, setStockItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -18,6 +19,7 @@ export default function AddStockItemModal({ isOpen, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const formData = new FormData(e.target);
 
     const newItem = await createStockItem({
@@ -30,6 +32,7 @@ export default function AddStockItemModal({ isOpen, onClose, onSuccess }) {
     });
 
     if (onSuccess) onSuccess(newItem);
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -129,9 +132,10 @@ export default function AddStockItemModal({ isOpen, onClose, onSuccess }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Add Item
+                  {isSubmitting ? "Adding Item..." : "Add Item"}
                 </button>
               </div>
             </form>

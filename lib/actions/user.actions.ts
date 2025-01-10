@@ -6,6 +6,20 @@ import { redirect } from "next/navigation";
 import { createSession, destroySession } from "@/lib/session";
 import { sendVerificationEmail } from "@/lib/email";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { cache } from "react";
+
+const findUserByEmail = cache(async (email: string) => {
+  return await prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      password: true,
+      role: true,
+      fullName: true,
+    },
+  });
+});
 
 export async function signUp(formData: {
   fullName: string;
@@ -76,18 +90,18 @@ export async function signUp(formData: {
       formData.fullName,
       verificationToken
     );
-    
+
     return {
       success: true,
       message: "Please check your email to verify your account",
     };
   } catch (error) {
     return {
-      error: error instanceof Error ? error.message : "Failed to create account",
+      error:
+        error instanceof Error ? error.message : "Failed to create account",
     };
   }
 }
-
 
 export async function verifyEmail(token: string) {
   try {
@@ -117,25 +131,11 @@ export async function verifyEmail(token: string) {
 
 export async function signIn(formData: { email: string; password: string }) {
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: formData.email },
-      select: {
-        id: true,
-        email: true,
-        password: true,
-        role: true,
-        fullName: true,
-      },
-    });
-
-    if (!user) {
-      return { error: "Invalid credentials" };
-    }
+    const user = await findUserByEmail(formData.email);
+    if (!user) return { error: "Invalid credentials" };
 
     const isValidPassword = await compare(formData.password, user.password);
-    if (!isValidPassword) {
-      return { error: "Invalid credentials" };
-    }
+    if (!isValidPassword) return { error: "Invalid credentials" };
 
     await createSession(user.id);
 

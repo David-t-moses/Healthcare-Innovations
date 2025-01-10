@@ -3,12 +3,24 @@
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { emitNotification } from "../socket";
-export async function getMedicalRecords() {
+import { cache } from "react";
+
+export const getMedicalRecords = cache(async () => {
   const user = await getCurrentUser();
 
+  const baseSelect = {
+    id: true,
+    diagnosis: true,
+    symptoms: true,
+    treatment: true,
+    notes: true,
+    recordDate: true,
+  };
+
   if (user?.role === "STAFF") {
-    return await prisma.medicalRecord.findMany({
-      include: {
+    return prisma.medicalRecord.findMany({
+      select: {
+        ...baseSelect,
         patient: {
           select: {
             id: true,
@@ -22,67 +34,50 @@ export async function getMedicalRecords() {
           },
         },
       },
-      orderBy: {
-        recordDate: "desc",
-      },
+      orderBy: { recordDate: "desc" },
     });
   }
 
-  return await prisma.medicalRecord.findMany({
-    where: {
-      patientId: user?.id,
-    },
-    include: {
+  return prisma.medicalRecord.findMany({
+    where: { patientId: user?.id },
+    select: {
+      ...baseSelect,
       recordedBy: {
         select: {
           fullName: true,
         },
       },
     },
-    orderBy: {
-      recordDate: "desc",
-    },
+    orderBy: { recordDate: "desc" },
   });
-}
+});
 
-export async function createMedicalRecord(data: {
-  patientId: string;
-  diagnosis: string;
-  symptoms: string;
-  treatment: string;
-  notes?: string;
-  attachments?: string[];
-}) {
+export async function createMedicalRecord(data: MedicalRecordData) {
   const user = await getCurrentUser();
 
-  const record = await prisma.medicalRecord.create({
-    data: {
-      patientId: data.patientId,
-      diagnosis: data.diagnosis,
-      symptoms: data.symptoms,
-      treatment: data.treatment,
-      notes: data.notes,
-      attachments: data.attachments,
-      recordedById: user?.id,
-      recordDate: new Date(),
-    },
-    include: {
-      patient: true,
-    },
+  return prisma.$transaction(async (tx) => {
+    const [record, notification] = await Promise.all([
+      tx.medicalRecord.create({
+        data: {
+          ...data,
+          recordedById: user?.id,
+          recordDate: new Date(),
+        },
+        include: { patient: true },
+      }),
+      tx.notification.create({
+        data: {
+          userId: data.patientId,
+          title: "New Medical Record",
+          message: "A new medical record has been added to your profile",
+          type: "MEDICAL_RECORDS",
+        },
+      }),
+    ]);
+
+    emitNotification(data.patientId, notification);
+    return record;
   });
-
-  const notification = await prisma.notification.create({
-    data: {
-      userId: data.patientId,
-      title: "New Medical Record",
-      message: `A new medical record has been added to your profile`,
-      type: "MEDICAL_RECORDS",
-    },
-  });
-
-  emitNotification(data.patientId, notification);
-
-  return record;
 }
 
 export async function deleteMedicalRecord(recordId: string) {

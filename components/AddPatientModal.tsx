@@ -83,7 +83,9 @@ export default function AddPatientModal({
       });
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to add patient";
+        error instanceof Error
+          ? error.message
+          : "Failed to add patient, Please try again.";
       console.error("Error adding patient:", errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -190,14 +192,7 @@ export default function AddPatientModal({
                   disabled={isLoading}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    "Add Patient"
-                  )}
+                  {isLoading ? <>Adding...</> : "Add Patient"}
                 </button>
               </div>
             </form>

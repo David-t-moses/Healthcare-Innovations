@@ -24,11 +24,14 @@ export default function EditPrescriptionModal({
     duration: prescription?.duration || "",
     notes: prescription?.notes || "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     await updatePrescription(prescription.id, formData);
     onUpdate();
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -82,7 +85,13 @@ export default function EditPrescriptionModal({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">Update Prescription</Button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? "Recording Payment..." : "Record Payment"}
+            </button>
           </div>
         </form>
       </DialogContent>

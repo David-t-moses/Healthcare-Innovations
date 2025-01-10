@@ -7,11 +7,45 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { scheduleAppointment } from "@/lib/actions/appointment.actions";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AppointmentSchedulerProps {
   patientId: string;
   staffId: string;
 }
+
+const AppointmentSchedulerSkeleton = () => (
+  <div className="space-y-6 flex flex-col bg-gray-100 p-10 rounded-md shadow-md w-full max-w-[500px] mx-auto">
+    {/* Title Input */}
+    <div>
+      <Skeleton className="h-5 w-24 mb-2 bg-white" />
+      <Skeleton className="h-10 w-full rounded-md bg-white" />
+    </div>
+
+    {/* Calendar */}
+    <div className="w-full mx-auto">
+      <Skeleton className="h-5 w-24 mb-2" />
+      <div className="bg-white rounded-xl shadow-sm p-4">
+        <Skeleton className="h-[300px] w-full rounded-lg" />
+      </div>
+    </div>
+
+    {/* Time Input */}
+    <div>
+      <Skeleton className="h-5 w-24 mb-2" />
+      <Skeleton className="h-10 w-full rounded-md" />
+    </div>
+
+    {/* Notes Textarea */}
+    <div>
+      <Skeleton className="h-5 w-24 mb-2" />
+      <Skeleton className="h-32 w-full rounded-md" />
+    </div>
+
+    {/* Submit Button */}
+    <Skeleton className="h-10 w-full rounded-md" />
+  </div>
+);
 
 export default function AppointmentScheduler({
   patientId,
@@ -60,16 +94,20 @@ export default function AppointmentScheduler({
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error("Failed to schedule appointment");
+      toast.error("Failed to schedule appointment, Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (isLoading) {
+    return <AppointmentSchedulerSkeleton />;
+  }
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 bg-gray-100 p-10 rounded-md shadow-md w-full max-w-[400px] mx-auto"
+      className="space-y-6 flex flex-col bg-gray-100 sm:p-10 p-4 rounded-md shadow-md w-full max-w-[500px] mx-auto"
     >
       <div>
         <label className="block text-sm font-medium mb-2">Title</label>
@@ -81,19 +119,21 @@ export default function AppointmentScheduler({
         />
       </div>
 
-      <div className="calendar-wrapper">
+      <div className="w-full mx-auto">
         <label className="block text-sm font-medium mb-2">Date</label>
-        <div className="bg-white rounded-md border p-0 flex justify-center items-center">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            disabled={(date) => date < new Date()}
-            className="w-full"
-            initialFocus
-            fixedWeeks
-            weekStartsOn={0}
-          />
+
+        <div className="flex justify-center w-full">
+          <div className="bg-white rounded-xl shadow-sm p-4 w-full max-w-md">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              disabled={(date) => date < new Date()}
+              className="w-full"
+              initialFocus
+              fixedWeeks
+            />
+          </div>
         </div>
       </div>
 

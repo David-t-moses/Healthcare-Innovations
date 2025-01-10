@@ -1,34 +1,40 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { cache } from "react";
 
-export async function getStaffList() {
+export const getStaffList = cache(async () => {
   try {
     const staffList = await prisma.staffStatus.findMany({
-      orderBy: {
-        lastUpdated: "desc",
+      orderBy: { lastUpdated: "desc" },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        status: true,
+        email: true,
+        lastUpdated: true,
       },
     });
     return { success: true, data: staffList };
   } catch (error) {
-    console.error("Error fetching staff list:", error);
     return { success: false, error: "Failed to fetch staff list" };
   }
-}
+});
 
 export async function updateStaffStatus(staffId: string, status: string) {
-  try {
-    const updatedStaff = await prisma.staffStatus.update({
+  return prisma.$transaction(async (tx) => {
+    const updatedStaff = await tx.staffStatus.update({
       where: { id: staffId },
-      data: {
-        status,
-        lastUpdated: new Date(),
+      data: { status, lastUpdated: new Date() },
+      select: {
+        id: true,
+        status: true,
+        lastUpdated: true,
       },
     });
     return { success: true, data: updatedStaff };
-  } catch (error) {
-    return { success: false, error: "Failed to update staff status" };
-  }
+  });
 }
 
 export async function addStaffMember({
@@ -71,17 +77,15 @@ export async function deleteStaff(staffId: string) {
   }
 }
 
-export async function getActiveStaff() {
-  try {
-    const staff = await prisma.staffStatus.findMany({
-      take: 3,
-      orderBy: {
-        lastUpdated: "desc",
-      },
-    });
-    return staff;
-  } catch (error) {
-    console.log("Staff fetch error:", error);
-    return [];
-  }
-}
+export const getActiveStaff = cache(async () => {
+  return prisma.staffStatus.findMany({
+    take: 3,
+    orderBy: { lastUpdated: "desc" },
+    select: {
+      id: true,
+      name: true,
+      status: true,
+      lastUpdated: true,
+    },
+  });
+});

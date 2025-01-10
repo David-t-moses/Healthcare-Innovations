@@ -3,88 +3,66 @@
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { emitNotification } from "@/lib/socket";
+import { cache } from "react";
 
-export async function getPrescriptions() {
+export const getPrescriptions = cache(async () => {
   const user = await getCurrentUser();
 
-  if (user?.role === "STAFF") {
-    return await prisma.prescription.findMany({
-      include: {
-        patient: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+  const query =
+    user?.role === "STAFF"
+      ? {
+          include: {
+            patient: { select: { id: true, name: true, email: true } },
+            prescribedBy: { select: { fullName: true } },
           },
-        },
-        prescribedBy: {
-          select: {
-            fullName: true,
+        }
+      : {
+          where: { patientId: user?.id },
+          include: {
+            prescribedBy: { select: { fullName: true } },
           },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-  }
+        };
 
-  return await prisma.prescription.findMany({
-    where: {
-      patientId: user?.id,
-    },
-    include: {
-      prescribedBy: {
-        select: {
-          fullName: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
+  return prisma.prescription.findMany({
+    ...query,
+    orderBy: { createdAt: "desc" },
   });
-}
+});
 
-export async function createPrescription(data: {
-  patientId: string;
-  medication: string;
-  dosage: string;
-  duration: string;
-  notes?: string;
-}) {
+export async function createPrescription(data: PrescriptionData) {
   const user = await getCurrentUser();
 
-  const prescription = await prisma.prescription.create({
-    data: {
-      patientId: data.patientId,
-      medication: data.medication,
-      dosage: data.dosage,
-      duration: data.duration,
-      notes: data.notes,
-      prescribedById: user?.id,
-    },
-    include: {
-      patient: true,
-    },
-  });
+  return prisma.$transaction(async (tx) => {
+    const [prescription, notification] = await Promise.all([
+      tx.prescription.create({
+        data: {
+          patientId: data.patientId,
+          medication: data.medication,
+          dosage: data.dosage,
+          duration: data.duration,
+          notes: data.notes,
+          prescribedById: user?.id,
+        },
+        include: { patient: true },
+      }),
+      tx.notification.create({
+        data: {
+          userId: data.patientId,
+          title: "New Prescription",
+          message: `You have been prescribed ${data.medication}`,
+          type: "PRESCRIPTIONS",
+        },
+      }),
+    ]);
 
-  const notification = await prisma.notification.create({
-    data: {
-      userId: data.patientId,
-      title: "New Prescription",
-      message: `You have been prescribed ${data.medication}`,
+    emitNotification(data.patientId, {
       type: "PRESCRIPTIONS",
-    },
-  });
+      prescription,
+      notification,
+    });
 
-  emitNotification(data.patientId, {
-    type: "PRESCRIPTIONS",
-    prescription,
-    notification,
+    return prescription;
   });
-
-  return prescription;
 }
 
 export async function deletePrescription(prescriptionId: string) {

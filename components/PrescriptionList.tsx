@@ -67,7 +67,7 @@ export default function PrescriptionList({ userRole, onPrescriptionAdded }) {
             className="flex items-center gap-2 bg-blue-600"
           >
             <PlusCircle className="h-4 w-4" />
-            Add Prescription
+            <span className="hidden md:block">Add Prescription</span>
           </Button>
         )}
       </div>

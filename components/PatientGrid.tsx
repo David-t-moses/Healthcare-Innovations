@@ -1,12 +1,11 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, User, Trash2 } from "lucide-react";
-import { DeleteConfirmationModal } from "./DeleteComfirmationModal";
+import { Calendar, User, Trash2, Phone, Mail, Shield } from "lucide-react";
+import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
 
 interface Patient {
   id: string;
@@ -65,71 +64,71 @@ export default function PatientGrid({ onDeletePatient }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [patients]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {patients.map((patient) => (
         <div
           key={patient.id}
-          className="bg-white rounded-lg shadow-md p-6 space-y-4"
+          className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 overflow-hidden"
         >
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-xl font-semibold text-blue-600">
-                {patient.name.charAt(0)}
-              </span>
+          <div className="p-6">
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-xl font-bold text-white">
+                  {patient.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg text-gray-900">
+                  {patient.name}
+                </h3>
+                <Badge
+                  variant={
+                    patient.status === "active" ? "success" : "secondary"
+                  }
+                  className="mt-1"
+                >
+                  {patient.status}
+                </Badge>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold">{patient.name}</h3>
-              <p className="text-sm text-gray-500">{patient.email}</p>
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Phone</span>
-              <span>{patient.phone}</span>
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center text-gray-600">
+                <Mail className="w-4 h-4 mr-2" />
+                <span className="truncate">{patient.email || "No email"}</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <Phone className="w-4 h-4 mr-2" />
+                <span>{patient.phone || "No phone"}</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <Shield className="w-4 h-4 mr-2" />
+                <span>{patient.insurance || "No insurance"}</span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Insurance</span>
-              <span>{patient.insurance || "Not provided"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Status</span>
-              <Badge
-                variant={patient.status === "active" ? "success" : "secondary"}
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 hover:bg-gray-50"
+                onClick={() =>
+                  router.push(`/patients/schedule?patientId=${patient.id}`)
+                }
               >
-                {patient.status}
-              </Badge>
+                <Calendar className="w-4 h-4 mr-2" />
+                Schedule
+              </Button>
+              <Button
+                variant="destructive"
+                className="hover:bg-red-600"
+                onClick={() => setPatientToDelete(patient)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
-          </div>
-
-          <div className="flex gap-2 pt-4">
-            {/* <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => router.push(`/patients/details/${patient.id}`)}
-            >
-              <User className="w-4 h-4 mr-2" />
-              Details
-            </Button> */}
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() =>
-                router.push(`/patients/schedule?patientId=${patient.id}`)
-              }
-            >
-              <Calendar className="w-4 h-4 mr-2" />
-              Schedule
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => setPatientToDelete(patient)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       ))}

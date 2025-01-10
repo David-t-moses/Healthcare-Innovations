@@ -4,27 +4,33 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { sendReorderEmail } from "../email";
 import { emitNotification } from "../socket";
+import { cache } from "react";
 
-async function notifyAllStaff(title: string, message: string, type: string) {
-  const staffUsers = await prisma.user.findMany({
+// Cache staff users query
+const getStaffUsers = cache(async () => {
+  return await prisma.user.findMany({
     where: { role: "STAFF" },
+    select: { id: true }, // Only select needed fields
   });
+});
 
-  console.log("Notifying staff users:", staffUsers);
+// Optimized notification creation
+async function notifyAllStaff(title: string, message: string, type: string) {
+  const staffUsers = await getStaffUsers();
 
-  for (const staff of staffUsers) {
-    const notification = await prisma.notification.create({
-      data: {
-        userId: staff.id,
-        title,
-        message,
-        type,
-      },
-    });
+  // Batch create notifications
+  const notifications = await prisma.$transaction(
+    staffUsers.map((staff) =>
+      prisma.notification.create({
+        data: { userId: staff.id, title, message, type },
+      })
+    )
+  );
 
-    console.log("Emitting notification:", notification);
-    emitNotification(staff.id, notification);
-  }
+  // Batch emit notifications
+  notifications.forEach((notification) =>
+    emitNotification(notification.userId, notification)
+  );
 }
 
 export async function createStockItem(data: {
@@ -35,31 +41,40 @@ export async function createStockItem(data: {
   vendorId: string;
   status: string;
 }) {
-  const stockItem = await prisma.stockItem.create({
-    data: {
-      ...data,
-      reorderQuantity: Number(data.reorderQuantity),
-    },
+  return await prisma.$transaction(async (tx) => {
+    const stockItem = await tx.stockItem.create({
+      data: {
+        ...data,
+        reorderQuantity: Number(data.reorderQuantity),
+      },
+    });
+
+    if (stockItem.quantity <= stockItem.minimumQuantity) {
+      await notifyAllStaff(
+        "Low Stock Alert",
+        `${stockItem.name} is running low (${stockItem.quantity} remaining)`,
+        "STOCK_LOW"
+      );
+    }
+
+    return stockItem;
   });
-
-  if (stockItem.quantity <= stockItem.minimumQuantity) {
-    await notifyAllStaff(
-      "Low Stock Alert",
-      `${stockItem.name} is running low (${stockItem.quantity} remaining)`,
-      "STOCK_LOW"
-    );
-  }
-
-  return stockItem;
 }
 
-export async function getStockItems() {
+// Cached stock items query
+export const getStockItems = cache(async () => {
   return await prisma.stockItem.findMany({
     include: {
-      vendor: true,
+      vendor: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
     },
   });
-}
+});
 
 export async function deleteStockItem(id: string) {
   await prisma.stockOrder.deleteMany({

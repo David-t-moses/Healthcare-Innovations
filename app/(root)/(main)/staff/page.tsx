@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   getStaffList,
   updateStaffStatus,
@@ -12,6 +11,49 @@ import {
 } from "@/lib/actions/staff.actions";
 import { AiOutlinePlus, AiOutlineDelete } from "react-icons/ai";
 import AddStaffModal from "@/components/AddStaffModal";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const StaffPageSkeleton = () => (
+  <div className="max-w-7xl mx-auto p-6">
+    {/* Header Section */}
+    <div className="mb-8">
+      <Skeleton className="h-9 w-64 mb-2 bg-white" />
+      <Skeleton className="h-6 w-80 bg-white" />
+    </div>
+
+    {/* Add Staff Button */}
+    <Skeleton className="h-10 w-40 rounded-lg mb-6 bg-white" />
+
+    {/* Staff Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {[1, 2, 3, 4, 5, 6].map((index) => (
+        <div key={index} className="bg-white rounded-lg shadow-md p-6">
+          {/* Header with Name and Status */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-40" />
+            </div>
+            <Skeleton className="h-6 w-20 rounded-full" />
+          </div>
+
+          {/* Staff Details */}
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="h-4 w-48" />
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 mt-4">
+              <Skeleton className="h-9 flex-1 rounded-md" />
+              <Skeleton className="h-9 flex-1 rounded-md" />
+              <Skeleton className="h-9 w-9 rounded-full" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
 
 export default function StaffPage() {
   const [staffList, setStaffList] = useState([]);
@@ -21,7 +63,13 @@ export default function StaffPage() {
   const [deletingStaffId, setDeletingStaffId] = useState(null);
 
   useEffect(() => {
-    fetchStaffData();
+    const loadData = async () => {
+      setIsLoading(true);
+
+      await fetchStaffData();
+    };
+
+    loadData();
   }, []);
 
   const fetchStaffData = async () => {
@@ -62,7 +110,7 @@ export default function StaffPage() {
   };
 
   if (isLoading) {
-    return <LoadingSpinner message="Loading staff information..." />;
+    return <StaffPageSkeleton />;
   }
 
   return (

@@ -7,7 +7,6 @@ import AddVendorModal from "@/components/AddVendorModal";
 import AddStockItemModal from "@/components/AddStockItemModal";
 import EditStockItemModal from "@/components/EditStockItemModal";
 import EditVendorModal from "@/components/EditVendorModal";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import { getVendors } from "@/lib/actions/vendor.actions";
 import {
   getStockItems,
@@ -16,6 +15,60 @@ import {
 } from "@/lib/actions/stock.actions";
 import { deleteVendor } from "@/lib/actions/vendor.actions";
 import ReorderStockButton from "@/components/ReorderStockButton";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const StockPageSkeleton = () => (
+  <div className="max-w-7xl mx-auto p-6">
+    {/* Header Section */}
+    <div className="mb-8">
+      <Skeleton className="h-10 w-64 mb-2 bg-white" />
+      <Skeleton className="h-6 w-80 bg-white" />
+    </div>
+
+    {/* Tab Buttons */}
+    <div className="flex space-x-4 mb-8">
+      <Skeleton className="h-12 w-32 rounded-lg bg-white" />
+      <Skeleton className="h-12 w-32 rounded-lg bg-white" />
+    </div>
+
+    {/* Grid Layout */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Add New Item Card */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-9 w-9 rounded-full" />
+        </div>
+      </div>
+
+      {/* Item Cards */}
+      {[1, 2, 3, 4, 5].map((index) => (
+        <div key={index} className="bg-white p-6 rounded-lg shadow-md">
+          <div className="flex justify-between items-start mb-4">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <div className="flex space-x-2">
+              <Skeleton className="h-9 w-9 rounded-full" />
+              <Skeleton className="h-9 w-9 rounded-full" />
+            </div>
+          </div>
+
+          {/* Stock Level Indicator */}
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-12" />
+            </div>
+            <Skeleton className="h-2 w-full rounded-full" />
+            <Skeleton className="h-9 w-full rounded-lg" />
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
 
 export default function StockPage() {
   const [activeTab, setActiveTab] = useState("items");
@@ -28,7 +81,12 @@ export default function StockPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
+    const loadData = async () => {
+      setIsLoading(true);
+      await fetchData();
+    };
+
+    loadData();
   }, []);
 
   const handleDelete = async (id: string) => {
@@ -60,7 +118,7 @@ export default function StockPage() {
   };
 
   if (isLoading) {
-    return <LoadingSpinner message="Loading stock management..." />;
+    return <StockPageSkeleton />;
   }
 
   const renderItems = () => {

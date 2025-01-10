@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { cache } from "react";
 
 export async function createVendor(data: {
   name: string;
@@ -8,18 +9,33 @@ export async function createVendor(data: {
   phone: string;
   address: string;
 }) {
-  return await prisma.vendor.create({
-    data,
+  return await prisma.$transaction(async (tx) => {
+    return tx.vendor.create({
+      data,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        address: true,
+      },
+    });
   });
 }
 
-export async function getVendors() {
+export const getVendors = cache(async () => {
   return await prisma.vendor.findMany({
     include: {
-      stockItems: true,
+      stockItems: {
+        select: {
+          id: true,
+          name: true,
+          quantity: true,
+        },
+      },
     },
   });
-}
+});
 
 export async function deleteVendor(id: string) {
   return await prisma.vendor.delete({

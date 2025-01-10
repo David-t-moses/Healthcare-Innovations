@@ -12,8 +12,73 @@ import {
   getUserSettings,
 } from "@/lib/actions/settings.actions";
 import Button from "@/components/Button";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import { getCurrentUser } from "@/lib/auth";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const SettingsPageSkeleton = () => (
+  <div className="max-w-7xl mx-auto p-6">
+    {/* Header */}
+    <div className="mb-8">
+      <Skeleton className="h-9 w-48 mb-2 bg-white" />
+      <Skeleton className="h-5 w-72 bg-white" />
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Sidebar */}
+      <div className="md:col-span-1">
+        <div className="bg-white rounded-lg shadow-md p-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="mb-2">
+              <Skeleton className="h-12 w-full rounded-lg" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="md:col-span-3">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          {/* Section Header */}
+          <Skeleton className="h-7 w-48 mb-6" />
+
+          {/* Form Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-10 w-full rounded-lg" />
+              </div>
+            ))}
+
+            {/* Full Width Elements */}
+            <div className="md:col-span-2 space-y-4">
+              <Skeleton className="h-32 w-full rounded-lg" />
+              <div className="flex justify-end">
+                <Skeleton className="h-10 w-32 rounded-lg" />
+              </div>
+            </div>
+          </div>
+
+          {/* Toggle Sections */}
+          <div className="mt-8 space-y-4">
+            {[1, 2].map((i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-36" />
+                  <Skeleton className="h-4 w-48" />
+                </div>
+                <Skeleton className="h-6 w-12 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -75,7 +140,7 @@ export default function SettingsPage() {
           ...result.data,
         }));
       } else {
-        toast.error(result.error || "Update failed");
+        toast.error(result.error || "Update failed, Please try again.");
       }
     } catch (error) {
       console.error("Profile Update Error:", error);
@@ -130,7 +195,9 @@ export default function SettingsPage() {
       toast.success("Password updated successfully");
       e.target.reset();
     } else {
-      toast.error(result.error || "Failed to update password");
+      toast.error(
+        result.error || "Failed to update password , Please try again."
+      );
     }
   };
 
@@ -148,7 +215,7 @@ export default function SettingsPage() {
         ];
 
   if (isPageLoading) {
-    return <LoadingSpinner message="Loading settings..." />;
+    return <SettingsPageSkeleton />;
   }
 
   return (

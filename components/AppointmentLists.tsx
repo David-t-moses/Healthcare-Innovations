@@ -25,21 +25,40 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface AppointmentsListProps {
-  appointments: any[];
+  appointments: {
+    id: string;
+    title: string;
+    startTime: string | Date;
+    status: AppointmentStatus;
+    patient?: { name: string };
+    user?: { fullName: string };
+  }[];
   userRole: "PATIENT" | "STAFF";
 }
 
 export default function AppointmentsList({
-  appointments,
+  appointments = [],
   userRole,
 }: AppointmentsListProps) {
-  const [editingAppointment, setEditingAppointment] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Adjust this number as needed
 
-  const sortedAppointments = [...appointments].sort(
-    (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-  );
+  const sortedAppointments = appointments?.length
+    ? [...appointments].sort(
+        (a, b) =>
+          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+      )
+    : [];
+
+  // Pagination calculations
+  const totalPages = Math.ceil(sortedAppointments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentAppointments = sortedAppointments.slice(startIndex, endIndex);
+
   const getStatusColor = (status: AppointmentStatus) => {
     const colors = {
       PENDING: "bg-yellow-100 text-yellow-800",
@@ -51,6 +70,26 @@ export default function AppointmentsList({
   };
 
   const router = useRouter();
+
+  const renderPaginationButtons = () => {
+    const buttons = [];
+    for (let i = 1; i <= totalPages; i++) {
+      buttons.push(
+        <Button
+          key={i}
+          variant={currentPage === i ? "default" : "outline"}
+          size="sm"
+          onClick={() => setCurrentPage(i)}
+          className={`w-8 h-8 ${
+            currentPage === i ? "bg-blue-600 text-white" : ""
+          }`}
+        >
+          {i}
+        </Button>
+      );
+    }
+    return buttons;
+  };
 
   const handleDelete = async (appointmentId: string) => {
     try {
@@ -170,6 +209,39 @@ export default function AppointmentsList({
             )}
           </TableBody>
         </Table>
+        {sortedAppointments.length > itemsPerPage && (
+          <div className="flex items-center justify-between px-4 py-3 border-t">
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              <div className="flex gap-1 mx-2">{renderPaginationButtons()}</div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="text-sm text-gray-500">
+              Showing {startIndex + 1} to{" "}
+              {Math.min(endIndex, sortedAppointments.length)} of{" "}
+              {sortedAppointments.length} entries
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
