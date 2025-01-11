@@ -362,27 +362,20 @@ export default function DashboardLayout({
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  <div>
-                    <motion.button
-                      onClick={() => setShowNotifications(!showNotifications)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className=" relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
-                    >
-                      <AiOutlineBell className="w-5 h-5 text-gray-600" />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </motion.button>
-                    {showNotifications && (
-                      <NotificationDropdown
-                        notifications={notifications}
-                        onClose={() => setShowNotifications(false)}
-                      />
+                  <motion.button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className=" relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                  >
+                    <AiOutlineBell className="w-5 h-5 text-gray-600" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {unreadCount}
+                      </span>
                     )}
-                  </div>
+                  </motion.button>
+
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     onClick={handleSettingsRoute}
@@ -450,27 +443,20 @@ export default function DashboardLayout({
                 </div>
 
                 <div className="flex items-center justify-end space-x-3">
-                  <div>
-                    <motion.button
-                      onClick={() => setShowNotifications(!showNotifications)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
-                    >
-                      <AiOutlineBell className="w-5 h-5 text-gray-600" />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </motion.button>
-                    {showNotifications && (
-                      <NotificationDropdown
-                        notifications={notifications}
-                        onClose={() => setShowNotifications(false)}
-                      />
+                  <motion.button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                  >
+                    <AiOutlineBell className="w-5 h-5 text-gray-600" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {unreadCount}
+                      </span>
                     )}
-                  </div>
+                  </motion.button>
+
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     onClick={handleSettingsRoute}
@@ -489,6 +475,14 @@ export default function DashboardLayout({
                 </div>
               </div>
             </motion.div>
+            <div className="xl:relative">
+              {showNotifications && (
+                <NotificationDropdown
+                  notifications={notifications}
+                  onClose={() => setShowNotifications(false)}
+                />
+              )}
+            </div>
           </header>
 
           <div className="p-4 sm:p-6 w-full">{children}</div>

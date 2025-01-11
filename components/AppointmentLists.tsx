@@ -144,7 +144,7 @@ export default function AppointmentsList({
                 </TableCell>
               </TableRow>
             ) : (
-              sortedAppointments.map((apt) => (
+              currentAppointments.map((apt) => (
                 <TableRow
                   key={apt.id}
                   className="hover:bg-gray-50 transition-colors"

@@ -14,38 +14,38 @@ interface AppointmentSchedulerProps {
   staffId: string;
 }
 
-const AppointmentSchedulerSkeleton = () => (
-  <div className="space-y-6 flex flex-col bg-gray-100 p-10 rounded-md shadow-md w-full max-w-[500px] mx-auto">
-    {/* Title Input */}
-    <div>
-      <Skeleton className="h-5 w-24 mb-2 bg-white" />
-      <Skeleton className="h-10 w-full rounded-md bg-white" />
-    </div>
+// const AppointmentSchedulerSkeleton = () => (
+//   <div className="space-y-6 flex flex-col bg-gray-100 p-10 rounded-md shadow-md w-full max-w-[500px] mx-auto">
+//     {/* Title Input */}
+//     <div>
+//       <Skeleton className="h-5 w-24 mb-2 bg-white" />
+//       <Skeleton className="h-10 w-full rounded-md bg-white" />
+//     </div>
 
-    {/* Calendar */}
-    <div className="w-full mx-auto">
-      <Skeleton className="h-5 w-24 mb-2" />
-      <div className="bg-white rounded-xl shadow-sm p-4">
-        <Skeleton className="h-[300px] w-full rounded-lg" />
-      </div>
-    </div>
+//     {/* Calendar */}
+//     <div className="w-full mx-auto">
+//       <Skeleton className="h-5 w-24 mb-2" />
+//       <div className="bg-white rounded-xl shadow-sm p-4">
+//         <Skeleton className="h-[300px] w-full rounded-lg" />
+//       </div>
+//     </div>
 
-    {/* Time Input */}
-    <div>
-      <Skeleton className="h-5 w-24 mb-2" />
-      <Skeleton className="h-10 w-full rounded-md" />
-    </div>
+//     {/* Time Input */}
+//     <div>
+//       <Skeleton className="h-5 w-24 mb-2" />
+//       <Skeleton className="h-10 w-full rounded-md" />
+//     </div>
 
-    {/* Notes Textarea */}
-    <div>
-      <Skeleton className="h-5 w-24 mb-2" />
-      <Skeleton className="h-32 w-full rounded-md" />
-    </div>
+//     {/* Notes Textarea */}
+//     <div>
+//       <Skeleton className="h-5 w-24 mb-2" />
+//       <Skeleton className="h-32 w-full rounded-md" />
+//     </div>
 
-    {/* Submit Button */}
-    <Skeleton className="h-10 w-full rounded-md" />
-  </div>
-);
+//     {/* Submit Button */}
+//     <Skeleton className="h-10 w-full rounded-md" />
+//   </div>
+// );
 
 export default function AppointmentScheduler({
   patientId,
@@ -100,9 +100,9 @@ export default function AppointmentScheduler({
     }
   };
 
-  if (isLoading) {
-    return <AppointmentSchedulerSkeleton />;
-  }
+  // if (isLoading) {
+  //   return <AppointmentSchedulerSkeleton />;
+  // }
 
   return (
     <form

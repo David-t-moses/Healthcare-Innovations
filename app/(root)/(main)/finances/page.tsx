@@ -501,13 +501,13 @@ export default function SalesPage() {
         payment={editingPayment}
         isOpen={!!editingPayment}
         onClose={() => setEditingPayment(null)}
-        onSuccess={refreshData}
+        onUpdate={refreshData}
       />
       <EditFinancialRecordModal
         record={editingFinancialRecord}
         isOpen={!!editingFinancialRecord}
         onClose={() => setEditingFinancialRecord(null)}
-        onSuccess={refreshData}
+        onUpdate={refreshData}
       />
     </div>
   );

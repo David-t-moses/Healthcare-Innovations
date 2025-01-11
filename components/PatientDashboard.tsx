@@ -13,27 +13,58 @@ import {
   FileText,
   User,
   CalendarClock,
+  ArrowRight,
 } from "lucide-react";
+import { Skeleton } from "./ui/skeleton";
+import { useRouter } from "next/navigation";
+
+const AppointmentSkeleton = () => (
+  <div className="space-y-4">
+    <Skeleton className="h-6 w-3/4" />
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-4 w-4" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-4 w-4" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-4 w-4" />
+        <Skeleton className="h-4 w-40" />
+      </div>
+    </div>
+  </div>
+);
 
 export default function PatientDashboard({ userId, searchTerm }) {
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [activePrescriptions, setActivePrescriptions] = useState([]);
   const [recentRecords, setRecentRecords] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     const loadDashboardData = async () => {
-      const { appointments } = await getAppointments(userId, "PATIENT");
+      setIsLoading(true);
+      const appointmentsData = await getAppointments(userId, "PATIENT");
 
-      const upcoming = appointments
-        .filter((apt) => new Date(apt.startTime) > new Date())
-        .filter(
-          (apt) =>
-            !searchTerm ||
-            apt.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            apt.user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-        .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
-      setUpcomingAppointments(upcoming);
+      if (appointmentsData && Array.isArray(appointmentsData)) {
+        const upcoming = appointmentsData
+          .filter((apt) => new Date(apt.startTime) > new Date())
+          .filter(
+            (apt) =>
+              !searchTerm ||
+              apt.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              apt.user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+          .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+        setUpcomingAppointments(upcoming);
+      } else {
+        setUpcomingAppointments([]);
+      }
 
       const prescriptionsData = await getPrescriptions();
       const filteredPrescriptions = prescriptionsData.filter(
@@ -54,23 +85,39 @@ export default function PatientDashboard({ userId, searchTerm }) {
           records.dosage.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setRecentRecords(filteredRecords);
+      setIsLoading(false);
     };
 
     loadDashboardData();
   }, [userId]);
 
+  const handleViewAllMedications = () => {
+    router.push("/prescriptions");
+  };
+
+  const handleViewAllRecords = () => {
+    router.push("/medical-records");
+  };
+
   return (
-    <div className="p-6">
+    <div className="p-6 ">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 auto-rows-[minmax(180px,auto)]">
-        {/* Next Appointment Widget - Spans 2 columns */}
-        <Card className="p-6 md:col-span-2 hover:shadow-lg transition-shadow">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <CalendarClock className="h-5 w-5 text-blue-600" />
+        {/* Next Appointment Widget */}
+        <Card className="p-6 md:col-span-2 hover:shadow-lg transition-shadow bg-white/50 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <CalendarClock className="h-5 w-5 text-blue-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Next Appointment
+              </h2>
             </div>
-            <h2 className="text-lg font-semibold">Next Appointment</h2>
           </div>
-          {upcomingAppointments[0] ? (
+
+          {isLoading ? (
+            <AppointmentSkeleton />
+          ) : upcomingAppointments[0] ? (
             <div className="space-y-3">
               <p className="text-xl font-medium">
                 {upcomingAppointments[0].title}
@@ -97,20 +144,41 @@ export default function PatientDashboard({ userId, searchTerm }) {
           )}
         </Card>
 
-        {/* Active Medications Widget - Spans 2 columns */}
-        <Card className="p-6 md:col-span-2 hover:shadow-lg transition-shadow">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="bg-green-100 p-2 rounded-lg">
-              <Pill className="h-5 w-5 text-green-600" />
+        {/* Active Medications Widget */}
+        <Card className="p-6 md:col-span-2 hover:shadow-lg transition-shadow bg-white/50 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="bg-green-100 p-2 rounded-lg">
+                <Pill className="h-5 w-5 text-green-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Active Medications
+              </h2>
             </div>
-            <h2 className="text-lg font-semibold">Active Medications</h2>
+            {activePrescriptions.length > 3 && (
+              <button
+                className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                onClick={handleViewAllMedications}
+              >
+                View all <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
           </div>
+
           <div className="space-y-3">
-            {activePrescriptions.length > 0 ? (
-              activePrescriptions.map((prescription) => (
+            {isLoading ? (
+              [...Array(3)].map((_, i) => (
+                <div key={i} className="p-3 rounded-lg">
+                  <Skeleton className="h-5 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2 mb-2" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              ))
+            ) : activePrescriptions.length > 0 ? (
+              activePrescriptions.slice(0, 3).map((prescription) => (
                 <div
                   key={prescription.id}
-                  className="p-3 bg-gray-50 rounded-lg"
+                  className="p-3 bg-gray-100/50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <p className="font-medium">{prescription.medication}</p>
                   <p className="text-sm text-gray-600">{prescription.dosage}</p>
@@ -125,18 +193,45 @@ export default function PatientDashboard({ userId, searchTerm }) {
           </div>
         </Card>
 
-        {/* Health Summary Widget - Spans full width */}
-        <Card className="p-6 md:col-span-4 hover:shadow-lg transition-shadow">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="bg-purple-100 p-2 rounded-lg">
-              <FileText className="h-5 w-5 text-purple-600" />
+        {/* Health Summary Widget */}
+        <Card className="p-6 md:col-span-4 hover:shadow-lg transition-shadow bg-white/50 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="bg-purple-100 p-2 rounded-lg">
+                <FileText className="h-5 w-5 text-purple-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Recent Health Updates
+              </h2>
             </div>
-            <h2 className="text-lg font-semibold">Recent Health Updates</h2>
+            {recentRecords.length > 3 && (
+              <button
+                onClick={handleViewAllRecords}
+                className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              >
+                View all <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
           </div>
+
           <div className="grid md:grid-cols-3 gap-4">
-            {recentRecords.length > 0 ? (
-              recentRecords.map((record) => (
-                <div key={record.id} className="p-4 bg-gray-50 rounded-lg">
+            {isLoading ? (
+              [...Array(3)].map((_, i) => (
+                <div key={i} className="p-4 rounded-lg">
+                  <Skeleton className="h-5 w-3/4 mb-3" />
+                  <Skeleton className="h-4 w-1/2 mb-2" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-3 w-3" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </div>
+              ))
+            ) : recentRecords.length > 0 ? (
+              recentRecords.slice(0, 3).map((record) => (
+                <div
+                  key={record.id}
+                  className="p-4 bg-gray-100/50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
                   <p className="font-medium">{record.diagnosis}</p>
                   <p className="text-sm text-gray-600 mt-2">
                     {format(new Date(record.recordDate), "PP")}

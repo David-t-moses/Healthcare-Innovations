@@ -59,7 +59,7 @@ const Sidebar = ({
 
       {/* Sidebar Content */}
       <motion.aside
-        className={`fixed inset-y-0 left-0 z-30 w-72 bg-gray-100 flex flex-col transform transition-transform duration-300 ease-in-out xl:translate-x-0 overflow-y-auto max-h-screen ${
+        className={`fixed inset-y-0 left-0 z-30 w-72 bg-gray-100/90 flex flex-col transform transition-transform duration-300 ease-in-out xl:translate-x-0 overflow-y-auto max-h-screen ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } ${!isSidebarOpen && "shadow-none"} ${
           isSidebarOpen ? "shadow-xl" : ""
@@ -71,7 +71,7 @@ const Sidebar = ({
           }
         }}
       >
-        <div className="p-6 bg-gray-100 border-b">
+        <div className="p-6 border-b">
           <h1 className="text-xl font-bold text-gray-800">Setzu Clinic</h1>
           <p className="text-sm text-gray-500 mt-1">
             Budapest, Kossuth Lajos tér 1-3, 1055
