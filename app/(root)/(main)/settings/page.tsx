@@ -84,7 +84,7 @@ const SettingsPageSkeleton = () => (
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [isLoading, setIsLoading] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isPageLoading, setIsPageLoading] = useState(false);
   const [userData, setUserData] = useState({
     fullName: "",
     email: "",
@@ -102,22 +102,27 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const user = await getCurrentUser();
-      const preferences = await getSystemPreferences();
+      setIsPageLoading(true);
+      try {
+        const user = await getCurrentUser();
+        const preferences = await getSystemPreferences();
 
-      if (user) {
-        setUserData((prevData) => ({
-          ...prevData,
-          fullName: user.fullName,
-          email: user.email,
-          role: user.role,
-          systemPreferences: preferences?.systemPreferences || {
-            calendarView: "week",
-            timeZone: "UTC",
-          },
-        }));
+        if (user) {
+          setUserData((prevData) => ({
+            ...prevData,
+            fullName: user.fullName,
+            email: user.email,
+            role: user.role,
+            systemPreferences: preferences?.systemPreferences || {
+              calendarView: "week",
+              timeZone: "UTC",
+            },
+          }));
+        }
+        setIsPageLoading(false);
+      } catch (error) {
+        console.log(error);
       }
-      setIsPageLoading(false);
     };
 
     fetchUserData();
