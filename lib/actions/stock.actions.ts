@@ -10,7 +10,7 @@ import { cache } from "react";
 const getStaffUsers = cache(async () => {
   return await prisma.user.findMany({
     where: { role: "STAFF" },
-    select: { id: true }, // Only select needed fields
+    select: { id: true },
   });
 });
 
@@ -118,10 +118,10 @@ export async function reorderStock(stockItemId: string) {
   const order = await prisma.stockOrder.create({
     data: {
       stockItemId,
-      quantity: stockItem.reorderQuantity,
+      quantity: stockItem?.reorderQuantity,
       status: "PENDING",
-      vendorId: stockItem.vendorId,
-      userId: user.id,
+      vendorId: stockItem?.vendorId,
+      userId: user?.id,
     },
   });
 
@@ -155,7 +155,11 @@ export async function reorderStock(stockItemId: string) {
     })
   );
 
+  console.log("sending email");
+
   sendReorderEmail(stockItem);
+
+  console.log("sent!");
 
   return { success: true, order };
 }

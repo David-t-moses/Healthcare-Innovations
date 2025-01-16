@@ -29,6 +29,7 @@ model User {
   notifications   Notification[]
   orders StockOrder[]
   resetPasswordToken String?
+  systemPreferences Json? @default("{\"calendarView\": \"week\", \"timeZone\": \"UTC\"}")
   prescribedPrescriptions Prescription[] @relation("PrescribedBy")
   recordedMedicalRecords MedicalRecord[] @relation("RecordedBy")
 }
@@ -196,3 +197,4 @@ model MedicalRecord {
   @@index([patientId])
   @@index([recordedById])
 }
+

@@ -9,7 +9,8 @@ import {
   updateProfile,
   updateNotificationPreferences,
   updatePassword,
-  getUserSettings,
+  getSystemPreferences,
+  updateSystemPreferences,
 } from "@/lib/actions/settings.actions";
 import Button from "@/components/Button";
 import { getCurrentUser } from "@/lib/auth";
@@ -99,20 +100,21 @@ export default function SettingsPage() {
     },
   });
 
-  const supabase = createClientComponentClient();
-
   useEffect(() => {
     const fetchUserData = async () => {
       const user = await getCurrentUser();
+      const preferences = await getSystemPreferences();
+
       if (user) {
         setUserData((prevData) => ({
           ...prevData,
           fullName: user.fullName,
           email: user.email,
           role: user.role,
-          // Preserve other state properties
-          notificationPreferences: prevData.notificationPreferences,
-          systemPreferences: prevData.systemPreferences,
+          systemPreferences: preferences?.systemPreferences || {
+            calendarView: "week",
+            timeZone: "UTC",
+          },
         }));
       }
       setIsPageLoading(false);
@@ -198,6 +200,26 @@ export default function SettingsPage() {
       toast.error(
         result.error || "Failed to update password , Please try again."
       );
+    }
+  };
+
+  const handleSystemPreferencesUpdate = async () => {
+    setIsLoading(true);
+    try {
+      const result = await updateSystemPreferences({
+        calendarView: userData.systemPreferences.calendarView,
+        timeZone: userData.systemPreferences.timeZone,
+      });
+
+      if (result.success) {
+        toast.success("System preferences updated successfully");
+      } else {
+        toast.error(result.error || "Failed to update system preferences");
+      }
+    } catch (error) {
+      toast.error("An error occurred while updating preferences");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -499,6 +521,14 @@ export default function SettingsPage() {
                       <option value="PST">Pacific Time</option>
                       <option value="GMT">GMT</option>
                     </select>
+                  </div>
+                  <div className="flex justify-end mt-4">
+                    <Button
+                      isLoading={isLoading}
+                      main_text="Save Preferences"
+                      loading_text="Saving..."
+                      onClick={handleSystemPreferencesUpdate}
+                    />
                   </div>
                 </div>
               </motion.div>

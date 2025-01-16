@@ -112,3 +112,49 @@ export async function updatePassword(data: {
     return { success: false, error: "Failed to update password" };
   }
 }
+
+export async function updateSystemPreferences(preferences: {
+  calendarView: string;
+  timeZone: string;
+}) {
+  try {
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      throw new Error("Not authenticated");
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: currentUser.id },
+      data: {
+        systemPreferences: {
+          calendarView: preferences.calendarView.toLowerCase(),
+          timeZone: preferences.timeZone,
+        },
+      },
+      select: {
+        systemPreferences: true,
+      },
+    });
+
+    return { success: true, data: updated };
+  } catch (error) {
+    console.error("Error updating system preferences:", error);
+    return { success: false, error: "Failed to update system preferences" };
+  }
+}
+
+export const getSystemPreferences = cache(async () => {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    return null;
+  }
+
+  return prisma.user.findUnique({
+    where: { id: currentUser.id },
+    select: {
+      systemPreferences: true,
+    },
+  });
+});
