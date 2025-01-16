@@ -4,10 +4,8 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FiUser, FiLock, FiSettings, FiBell } from "react-icons/fi";
 import { toast } from "sonner";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
   updateProfile,
-  updateNotificationPreferences,
   updatePassword,
   getSystemPreferences,
   updateSystemPreferences,
@@ -104,24 +102,30 @@ export default function SettingsPage() {
     const fetchUserData = async () => {
       setIsPageLoading(true);
       try {
-        const user = await getCurrentUser();
-        const preferences = await getSystemPreferences();
+        const [user, preferences] = await Promise.all([
+          getCurrentUser(),
+          getSystemPreferences(),
+        ]);
 
-        if (user) {
-          setUserData((prevData) => ({
-            ...prevData,
-            fullName: user.fullName,
-            email: user.email,
-            role: user.role,
-            systemPreferences: preferences?.systemPreferences || {
-              calendarView: "week",
-              timeZone: "UTC",
-            },
-          }));
+        if (!user) {
+          throw new Error("User not found");
         }
-        setIsPageLoading(false);
+
+        setUserData((prevData) => ({
+          ...prevData,
+          fullName: user.fullName || "",
+          email: user.email || "",
+          role: user.role || "",
+          systemPreferences: preferences?.systemPreferences || {
+            calendarView: "week",
+            timeZone: "UTC",
+          },
+        }));
       } catch (error) {
-        console.log(error);
+        console.error("Settings page error:", error);
+        toast.error("Failed to load settings. Please refresh the page.");
+      } finally {
+        setIsPageLoading(false);
       }
     };
 
@@ -156,31 +160,6 @@ export default function SettingsPage() {
       setIsLoading(false);
     }
   };
-
-  // const handleNotificationUpdate = async (key, value) => {
-  //   const {
-  //     data: { session },
-  //   } = await supabase.auth.getSession();
-  //   const newPreferences = {
-  //     ...userData.notificationPreferences,
-  //     [key]: value,
-  //   };
-
-  //   const result = await updateNotificationPreferences(
-  //     session?.user?.id,
-  //     newPreferences
-  //   );
-
-  //   if (result.success) {
-  //     setUserData((prev) => ({
-  //       ...prev,
-  //       notificationPreferences: newPreferences,
-  //     }));
-  //     toast.success("Notification preferences updated");
-  //   } else {
-  //     toast.error(result.error);
-  //   }
-  // };
 
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();

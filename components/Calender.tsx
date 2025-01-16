@@ -99,7 +99,7 @@ export default function Calendar({ userId }: any) {
         timezone={preferences.timeZone}
         onNavigate={(date) => {
           const formattedDate = new Date(date).toISOString().split("T")[0];
-          router.push(`/appointment/schedule`);
+          router.push(`/appointments/schedule`);
         }}
       />
     </div>
