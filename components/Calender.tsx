@@ -28,6 +28,7 @@ export default function Calendar({ userId }: any) {
     timeZone: "UTC",
   });
   const [loading, setLoading] = useState(true);
+  const [currentView, setCurrentView] = useState(preferences.calendarView);
 
   const router = useRouter();
 
@@ -37,11 +38,13 @@ export default function Calendar({ userId }: any) {
       try {
         const userPreferences = await getSystemPreferences();
         if (userPreferences?.systemPreferences) {
+          const view =
+            userPreferences.systemPreferences.calendarView.toLowerCase();
           setPreferences({
-            calendarView:
-              userPreferences.systemPreferences.calendarView.toLowerCase(),
+            calendarView: view,
             timeZone: userPreferences.systemPreferences.timeZone,
           });
+          setCurrentView(view);
         }
       } catch (error) {
         console.error("Error loading preferences:", error);
@@ -56,7 +59,7 @@ export default function Calendar({ userId }: any) {
   const handleSelectSlot = (slotInfo) => {
     const selectedDate = new Date(slotInfo.start);
     const formattedDate = selectedDate.toISOString().split("T")[0];
-    router.push(`/appointments/schedule?date=${formattedDate}`);
+    router.push(`/appointments/schedule`);
   };
 
   if (loading) {
@@ -91,11 +94,12 @@ export default function Calendar({ userId }: any) {
         selectable
         onSelectSlot={handleSelectSlot}
         defaultView={preferences.calendarView}
-        view={preferences.calendarView}
+        view={currentView}
+        onView={(newView) => setCurrentView(newView)}
         timezone={preferences.timeZone}
         onNavigate={(date) => {
           const formattedDate = new Date(date).toISOString().split("T")[0];
-          router.push(`/appointment/schedule?date=${formattedDate}`);
+          router.push(`/appointment/schedule`);
         }}
       />
     </div>
