@@ -101,29 +101,30 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchUserData = async () => {
       setIsPageLoading(true);
+
       try {
-        const [user, preferences] = await Promise.all([
-          getCurrentUser(),
-          getSystemPreferences(),
-        ]);
+        const user = await getCurrentUser();
+        if (user) {
+          const preferences = await getSystemPreferences();
 
-        if (!user) {
-          throw new Error("User not found");
+          setUserData({
+            fullName: user.fullName || "",
+            email: user.email || "",
+            role: user.role || "",
+            note: "",
+            notificationPreferences: {
+              emailNotifications: true,
+              appointmentReminders: true,
+            },
+            systemPreferences: preferences?.systemPreferences || {
+              calendarView: "week",
+              timeZone: "UTC",
+            },
+          });
         }
-
-        setUserData((prevData) => ({
-          ...prevData,
-          fullName: user.fullName || "",
-          email: user.email || "",
-          role: user.role || "",
-          systemPreferences: preferences?.systemPreferences || {
-            calendarView: "week",
-            timeZone: "UTC",
-          },
-        }));
       } catch (error) {
         console.error("Settings page error:", error);
-        toast.error("Failed to load settings. Please refresh the page.");
+        toast.error("Failed, please reload.");
       } finally {
         setIsPageLoading(false);
       }
