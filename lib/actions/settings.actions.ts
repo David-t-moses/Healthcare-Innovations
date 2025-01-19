@@ -145,16 +145,39 @@ export async function updateSystemPreferences(preferences: {
 }
 
 export const getSystemPreferences = cache(async () => {
-  const currentUser = await getCurrentUser();
+  try {
+    const currentUser = await getCurrentUser();
 
-  if (!currentUser) {
-    return null;
+    if (!currentUser) {
+      return {
+        systemPreferences: {
+          calendarView: "week",
+          timeZone: "UTC",
+        },
+      };
+    }
+
+    const preferences = await prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: {
+        systemPreferences: true,
+      },
+    });
+
+    return (
+      preferences || {
+        systemPreferences: {
+          calendarView: "week",
+          timeZone: "UTC",
+        },
+      }
+    );
+  } catch (error) {
+    return {
+      systemPreferences: {
+        calendarView: "week",
+        timeZone: "UTC",
+      },
+    };
   }
-
-  return prisma.user.findUnique({
-    where: { id: currentUser.id },
-    select: {
-      systemPreferences: true,
-    },
-  });
 });

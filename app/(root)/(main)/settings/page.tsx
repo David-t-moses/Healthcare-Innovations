@@ -103,14 +103,20 @@ export default function SettingsPage() {
       setIsPageLoading(true);
 
       try {
-        const user = await getCurrentUser();
-        if (user) {
-          const preferences = await getSystemPreferences();
+        const [user, preferencesData] = await Promise.allSettled([
+          getCurrentUser(),
+          getSystemPreferences(),
+        ]);
 
+        const userData = user.status === "fulfilled" ? user.value : null;
+        const preferences =
+          preferencesData.status === "fulfilled" ? preferencesData.value : null;
+
+        if (userData) {
           setUserData({
-            fullName: user.fullName || "",
-            email: user.email || "",
-            role: user.role || "",
+            fullName: userData.fullName || "",
+            email: userData.email || "",
+            role: userData.role || "",
             note: "",
             notificationPreferences: {
               emailNotifications: true,
@@ -124,7 +130,6 @@ export default function SettingsPage() {
         }
       } catch (error) {
         console.error("Settings page error:", error);
-        toast.error("Failed, please reload.");
       } finally {
         setIsPageLoading(false);
       }
