@@ -25,9 +25,9 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
 
       if (result.success) {
         toast.success("Staff member added successfully");
-        fetchStaffData();
         onSuccess(result.data);
         onClose();
+        e.target.reset();
       } else {
         toast.error(result.error);
       }
@@ -35,6 +35,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
       setIsSubmitting(false);
     }
   };
+
   const fetchStaffData = async () => {
     try {
       const { success, data, error } = await getStaffList();

@@ -61,6 +61,11 @@ export default function StaffPage() {
   const [updatingStaffId, setUpdatingStaffId] = useState(null);
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [deletingStaffId, setDeletingStaffId] = useState(null);
+  const [loadingActions, setLoadingActions] = useState({
+    active: null,
+    break: null,
+    delete: null,
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -82,8 +87,14 @@ export default function StaffPage() {
     setAddModalOpen(true);
   };
 
+  const handleStaffAdded = (newStaff) => {
+    setStaffList((prevList) => [...prevList, newStaff]);
+  };
+
   const handleStatusUpdate = async (staffId: string, newStatus: string) => {
-    setUpdatingStaffId(staffId);
+    const actionType = newStatus.toLowerCase();
+    setLoadingActions((prev) => ({ ...prev, [actionType]: staffId }));
+
     try {
       const { success, error } = await updateStaffStatus(staffId, newStatus);
       if (success) {
@@ -93,12 +104,12 @@ export default function StaffPage() {
         toast.error(error);
       }
     } finally {
-      setUpdatingStaffId(null);
+      setLoadingActions((prev) => ({ ...prev, [actionType]: null }));
     }
   };
 
   const handleDeleteStaff = async (staffId: string) => {
-    setDeletingStaffId(staffId);
+    setLoadingActions((prev) => ({ ...prev, delete: staffId }));
     const result = await deleteStaff(staffId);
     if (result.success) {
       toast.success("Staff member deleted successfully");
@@ -106,7 +117,7 @@ export default function StaffPage() {
     } else {
       toast.error(result.error);
     }
-    setDeletingStaffId(null);
+    setLoadingActions((prev) => ({ ...prev, delete: null }));
   };
 
   if (isLoading) {
@@ -174,27 +185,20 @@ export default function StaffPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleStatusUpdate(staff.id, "ACTIVE")}
-                  disabled={updatingStaffId === staff.id}
+                  disabled={loadingActions.active === staff.id}
                   className="flex-1 px-3 py-2 bg-green-600 text-white rounded-md text-sm font-medium disabled:opacity-50"
                 >
-                  {updatingStaffId === staff.id ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
-                  ) : (
-                    "Set Active"
-                  )}
+                  {loadingActions.active === staff.id ? "..." : "Set Active"}
                 </motion.button>
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleStatusUpdate(staff.id, "ON_BREAK")}
-                  disabled={updatingStaffId === staff.id}
+                  disabled={loadingActions.break === staff.id}
                   className="flex-1 px-3 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium disabled:opacity-50"
                 >
-                  {updatingStaffId === staff.id ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
-                  ) : (
-                    "Set Break"
-                  )}
+                  {loadingActions.break === staff.id ? "..." : "Set Break"}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
@@ -216,6 +220,7 @@ export default function StaffPage() {
         <AddStaffModal
           isOpen={isAddModalOpen}
           onClose={() => setAddModalOpen(false)}
+          onSuccess={handleStaffAdded}
         />
       </div>
     </div>
