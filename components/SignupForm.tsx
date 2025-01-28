@@ -113,6 +113,7 @@ export function SignupForm({
             type="password"
             id="organizationKey"
             name="organizationKey"
+            placeholder="Default key: PharmaApp"
             value={formData.organizationKey}
             onChange={handleChange}
             required
