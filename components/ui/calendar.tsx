@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -22,11 +22,13 @@ function Calendar({
         className
       )}
       classNames={{
-        months: "flex flex-col space-y-4 space-y-4",
-        month: "w-full space-y-4",
-        caption: "relative flex items-center justify-center gap-1 px-8 py-4",
-        caption_label: "text-lg font-semibold",
-        nav: "flex items-center gap-1",
+        months: "relative py-4 flex flex-col",
+        month: "text-center w-full space-y-4",
+        caption:
+          "relative flex flex-col items-center text-center justify-center gap-1 px-8 py-4 mx-auto",
+        caption_label:
+          "text-lg font-semibold flex flex-col text-center item-center justify center bg-blue-600 w-[52%] max-[385px]:text-[10px] text-white mx-auto rounded-2xl",
+        nav: "absolute w-full flex items-center justify-between gap-1",
         nav_button: cn(
           buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 hover:bg-blue-600/10"
@@ -64,8 +66,12 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: () => <ChevronLeft className="h-5 w-5" />,
-        IconRight: () => <ChevronRight className="h-5 w-5" />,
+        IconLeft: ({ ...props }) => (
+          <ArrowLeft className="h-5 w-5" {...props} />
+        ),
+        IconRight: ({ ...props }) => (
+          <ArrowRight className="h-5 w-5" {...props} />
+        ),
       }}
       {...props}
     />

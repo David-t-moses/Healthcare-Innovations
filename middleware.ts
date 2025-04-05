@@ -5,9 +5,18 @@ import { getSession } from "@/lib/session";
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   const session = await getSession();
-
-  // Get user role from session
   const userRole = session?.role;
+
+  // Check for stock confirmation/rejection with valid ID
+  if (
+    req.nextUrl.pathname.startsWith("/stock/confirm") ||
+    req.nextUrl.pathname.startsWith("/stock/reject")
+  ) {
+    const hasOrderId = req.nextUrl.searchParams.has("id");
+    if (hasOrderId) {
+      return res;
+    }
+  }
 
   const staffOnlyRoutes = ["/staff", "/finances", "/settings", "/stock"];
   const patientRoutes = [

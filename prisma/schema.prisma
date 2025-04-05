@@ -52,16 +52,22 @@ model Patient {
 }
 
 model PaymentHistory {
-  id            String   @id @default(uuid())
-  patientId     String
-  userId        String
-  amount        Decimal
-  date          DateTime @default(now())
-  status        String   @default("pending")
-  paymentMethod String?
-  patient       Patient  @relation(fields: [patientId], references: [id])
-  user          User     @relation(fields: [userId], references: [id])
+  id                String    @id @default(uuid())
+  patientId         String?   
+  userId            String
+  amount            Decimal
+  date              DateTime  @default(now())
+  status            String    @default("pending")
+  paymentMethod     String?
+  dueDate           DateTime?
+  serviceDescription String?
+  customerName      String?
+  beneficiary       String?
+  paymentType       String    @default("incoming") // Add this field
+  patient           Patient?  @relation(fields: [patientId], references: [id])
+  user              User      @relation(fields: [userId], references: [id])
 }
+
 
 model Appointment {
   id          String   @id @default(cuid())
@@ -87,11 +93,14 @@ enum AppointmentStatus {
 }
 
 model FinancialRecord {
-  id     String   @id @default(cuid())
-  amount Decimal
-  date   DateTime
-  type   String
+  id          String   @id @default(cuid())
+  amount      Decimal
+  date        DateTime
+  type        String
+  category    String   @default("Other")
+  description String?
 }
+
 
 model StaffStatus {
   id          String   @id @default(cuid())
@@ -104,16 +113,28 @@ model StaffStatus {
 
 
 model StockItem {
-  id              String @id @default(cuid())
+  id              String    @id @default(cuid())
   name            String
   quantity        Int
-  status          String
-  minimumQuantity Int    @default(10) 
-  reorderQuantity Int    @default(50) 
+  status          StockStatus @default(PENDING)
+  pricePerUnit    Decimal   @default(0)
+  minimumQuantity Int       @default(10) 
+  reorderQuantity Int       @default(50) 
   vendorId        String 
-  vendor          Vendor @relation(fields: [vendorId], references: [id])
-  orders StockOrder[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+  vendor          Vendor    @relation(fields: [vendorId], references: [id])
+  orders          StockOrder[]
+  rejectionReason String?
 }
+
+
+enum StockStatus {
+  PENDING
+  COMPLETED
+  REJECTED
+}
+
 
 model Vendor {
   id          String      @id @default(cuid())
@@ -144,20 +165,33 @@ enum NotificationType {
   STOCK_LOW
   MEDICAL_RECORDS
   PRESCRIPTIONS
+  REORDER_INITIATED
+  ORDER_CONFIRMED
+  ORDER_REJECTED
+  REORDER_FOLLOWUP
+}
+
+enum StockOrderStatus {
+  PENDING
+  COMPLETED
+  REJECTED
 }
 
 model StockOrder {
-  id          String   @id @default(cuid())
-  stockItemId String
-  quantity    Int
-  status      String   
-  vendorId    String
-  userId      String
-  createdAt   DateTime @default(now())
-  
-  stockItem   StockItem @relation(fields: [stockItemId], references: [id])
-  vendor      Vendor    @relation(fields: [vendorId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
+  id              String          @id @default(cuid())
+  stockItemId     String
+  quantity        Int
+  status          StockOrderStatus @default(PENDING)
+  vendorId        String
+  userId          String
+  rejectionReason String?
+  expiresAt       DateTime        @default(now())
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt
+
+  stockItem       StockItem       @relation(fields: [stockItemId], references: [id])
+  vendor          Vendor          @relation(fields: [vendorId], references: [id])
+  user            User            @relation(fields: [userId], references: [id])
 }
 
 model Prescription {

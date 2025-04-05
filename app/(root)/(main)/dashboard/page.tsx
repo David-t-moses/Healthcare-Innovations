@@ -82,10 +82,6 @@ export default function DashboardPage() {
     loadUser();
   }, []);
 
-  if (!isLoading) {
-    return <DashboardSkeleton />;
-  }
-
   if (!user) return null;
 
   return user?.role === "STAFF" ? (

@@ -15,6 +15,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-roboto)"],
+      },
       keyframes: {
         "accordion-down": {
           from: {

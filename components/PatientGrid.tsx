@@ -4,7 +4,8 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, User, Trash2, Phone, Mail, Shield } from "lucide-react";
+import { toast } from "sonner";
+import { Calendar, Trash2, Phone, Mail, Shield } from "lucide-react";
 import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
 
 interface Patient {
@@ -132,7 +133,6 @@ export default function PatientGrid({ onDeletePatient }) {
           </div>
         </div>
       ))}
-
       <DeleteConfirmationModal
         isOpen={!!patientToDelete}
         onClose={() => setPatientToDelete(null)}
@@ -142,6 +142,18 @@ export default function PatientGrid({ onDeletePatient }) {
             setPatientToDelete(null);
           }
         }}
+        title="Delete Patient"
+        description="This will permanently remove the patient's records from the system."
+        itemToDelete={patientToDelete?.name}
+        onSuccess={() => {
+          toast.success("Patient deleted successfully");
+        }}
+        onError={(error) => {
+          toast.error(`Failed to delete patient: ${error.message}`);
+        }}
+        isDangerous={true}
+        confirmText="Delete Patient"
+        cancelText="Keep Patient"
       />
     </div>
   );

@@ -6,10 +6,15 @@ import { getSession } from "@/lib/session";
 
 export async function getCurrentUser() {
   const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session");
+  console.log("Session cookie exists:", !!sessionCookie);
+
   try {
     const session = await getSession();
+    console.log("Session after getSession:", session);
 
     if (!session?.userId) {
+      console.log("No userId in session");
       return null;
     }
 

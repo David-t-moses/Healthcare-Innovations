@@ -22,6 +22,10 @@ export default function PatientList({ onDeletePatient }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [patientToDelete, setPatientToDelete] = useState(null);
+  const [deleteModalState, setDeleteModalState] = useState({
+    isOpen: false,
+    patientToDelete: null,
+  });
   const supabase = createClientComponentClient();
   const router = useRouter();
 
@@ -51,6 +55,22 @@ export default function PatientList({ onDeletePatient }) {
   useEffect(() => {
     fetchPatients();
   }, [searchQuery, patients]);
+
+  const handleDeleteClick = (patient) => {
+    setDeleteModalState({
+      isOpen: true,
+      patientToDelete: patient,
+    });
+  };
+
+  const handleDeleteSuccess = () => {
+    toast.success("Patient deleted successfully");
+    fetchPatients();
+  };
+
+  const handleDeleteError = (error: Error) => {
+    toast.error(`Failed to delete patient: ${error.message}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -175,14 +195,20 @@ export default function PatientList({ onDeletePatient }) {
       )}
 
       <DeleteConfirmationModal
-        isOpen={!!patientToDelete}
-        onClose={() => setPatientToDelete(null)}
+        isOpen={deleteModalState.isOpen}
+        onClose={() =>
+          setDeleteModalState({ isOpen: false, patientToDelete: null })
+        }
         onConfirm={async () => {
-          if (patientToDelete) {
-            await onDeletePatient(patientToDelete.id);
-            setPatientToDelete(null);
+          if (deleteModalState.patientToDelete) {
+            await onDeletePatient(deleteModalState.patientToDelete.id);
           }
         }}
+        title="Delete Patient"
+        description="This action cannot be undone. All patient records will be permanently removed."
+        itemToDelete={deleteModalState.patientToDelete?.name}
+        onSuccess={handleDeleteSuccess}
+        onError={handleDeleteError}
       />
     </div>
   );

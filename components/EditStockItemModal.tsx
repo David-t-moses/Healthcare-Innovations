@@ -19,8 +19,10 @@ export default function EditStockItemModal({ isOpen, onClose, item, vendors }) {
       quantity: Number(formData.get("quantity")),
       minimumQuantity: Number(formData.get("minimumQuantity")),
       reorderQuantity: Number(formData.get("reorderQuantity")),
+      pricePerUnit: Number(formData.get("pricePerUnit")),
       vendorId: formData.get("vendorId"),
     };
+
     await updateStockItem(item.id, updateData);
     await refreshNotifications();
     setIsSubmitting(false);
@@ -85,6 +87,19 @@ export default function EditStockItemModal({ isOpen, onClose, item, vendors }) {
                   name="reorderQuantity"
                   type="number"
                   defaultValue={item.reorderQuantity}
+                  className="w-full p-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Price Per Unit
+                </label>
+                <input
+                  name="pricePerUnit"
+                  type="number"
+                  step="0.01"
+                  defaultValue={item.pricePerUnit}
                   className="w-full p-2 border rounded-lg"
                   required
                 />

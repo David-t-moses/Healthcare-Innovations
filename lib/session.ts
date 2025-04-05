@@ -13,16 +13,26 @@ export async function createSession(userId: string) {
   const cookieStore = cookies();
   await cookieStore.set("session", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: false, // Set to false for development
     sameSite: "lax",
     maxAge: 86400, // 24 hours
+    path: "/", // Ensure the cookie is available for all paths
   });
+
+  // await cookieStore.set("session", token, {
+  //   httpOnly: true,
+  //   secure: process.env.NODE_ENV === "production",
+  //   sameSite: "lax",
+  //   maxAge: 86400, // 24 hours
+  // });
 }
 
 export async function getSession() {
   const cookieStore = cookies();
   const sessionCookie = await cookieStore.get("session");
   const token = sessionCookie?.value;
+
+  console.log("Token exists:", !!token);
 
   if (!token) return null;
 
@@ -31,8 +41,10 @@ export async function getSession() {
       token,
       new TextEncoder().encode(getJwtSecretKey())
     );
+    console.log("JWT verified successfully:", verified.payload);
     return verified.payload;
   } catch (err) {
+    console.error("JWT verification error:", err);
     return null;
   }
 }

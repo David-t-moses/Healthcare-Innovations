@@ -26,7 +26,9 @@ const StaffPageSkeleton = () => (
 
     {/* Staff Grid */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {[1, 2, 3, 4, 5, 6].map((index) => (
+      {[
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+      ].map((index) => (
         <div key={index} className="bg-white rounded-lg shadow-md p-6">
           {/* Header with Name and Status */}
           <div className="flex items-center justify-between mb-4">
@@ -131,7 +133,7 @@ export default function StaffPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-gray-900">Staff Management</h1>
+        <h1 className="text-4xl font-bold text-gray-900">Staff Management</h1>
         <p className="text-gray-600 mt-2">Monitor and manage staff status</p>
       </motion.div>
 
@@ -151,23 +153,34 @@ export default function StaffPage() {
             key={staff.id}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-lg shadow-md p-6"
+            className="bg-white rounded-xl shadow-md p-6 border border-gray-100"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold">{staff.name}</h3>
-                <p className="text-sm text-gray-500">{staff.email}</p>
+            <div className="flex items-center gap-4 mb-6">
+              {/* Decorative Initial Circle */}
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-full opacity-90" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.2),transparent)] rounded-full" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-white">
+                    {staff.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
               </div>
-              <div className="flex flex-col items-end">
+
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {staff.name}
+                </h3>
+                <p className="text-sm text-gray-500">{staff.email}</p>
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium
-                  ${
-                    staff.status === "ACTIVE"
-                      ? "bg-green-100 text-green-800"
-                      : staff.status === "ON_BREAK"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
+                  className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2
+              ${
+                staff.status === "ACTIVE"
+                  ? "bg-green-100 text-green-800"
+                  : staff.status === "ON_BREAK"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-red-100 text-red-800"
+              }`}
                 >
                   {staff.status}
                 </span>
@@ -175,20 +188,20 @@ export default function StaffPage() {
             </div>
 
             <div className="space-y-3">
-              <p className="text-gray-600">{staff.role}</p>
+              <p className="text-gray-600 font-medium">{staff.role}</p>
               <p className="text-sm text-gray-500">
                 Last updated: {format(new Date(staff.lastUpdated), "PPp")}
               </p>
 
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 mt-4">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleStatusUpdate(staff.id, "ACTIVE")}
                   disabled={loadingActions.active === staff.id}
-                  className="flex-1 px-3 py-2 bg-green-600 text-white rounded-md text-sm font-medium disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {loadingActions.active === staff.id ? "..." : "Set Active"}
+                  Set Active
                 </motion.button>
 
                 <motion.button
@@ -196,21 +209,22 @@ export default function StaffPage() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleStatusUpdate(staff.id, "ON_BREAK")}
                   disabled={loadingActions.break === staff.id}
-                  className="flex-1 px-3 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-white/80 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-all disabled:opacity-70 disabled:cursor-not-allowed backdrop-blur-sm hover:bg-gray-50"
                 >
-                  {loadingActions.break === staff.id ? "..." : "Set Break"}
+                  Set Break
                 </motion.button>
+
                 <motion.button
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={{ scale: 1.1, backgroundColor: "#FEE2E2" }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => handleDeleteStaff(staff.id)}
                   disabled={deletingStaffId === staff.id}
-                  className="mt-2 p-2 text-red-600 hover:bg-red-50 rounded-full"
+                  className="p-2.5 bg-white border border-red-200 text-red-600 rounded-lg transition-all hover:border-red-300 group"
                 >
                   {deletingStaffId === staff.id ? (
                     <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <AiOutlineDelete className="w-5 h-5" />
+                    <AiOutlineDelete className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   )}
                 </motion.button>
               </div>

@@ -27,6 +27,7 @@ export default function AddStockItemModal({ isOpen, onClose, onSuccess }) {
       quantity: Number(formData.get("quantity")),
       minimumQuantity: Number(formData.get("minimumQuantity")),
       reorderQuantity: Number(formData.get("reorderQuantity")),
+      pricePerUnit: Number(formData.get("pricePerUnit")),
       vendorId: formData.get("vendorId") as string,
       status: "IN_STOCK",
     });
@@ -101,6 +102,18 @@ export default function AddStockItemModal({ isOpen, onClose, onSuccess }) {
                 <input
                   name="reorderQuantity"
                   type="number"
+                  className="w-full p-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Price Per Unit
+                </label>
+                <input
+                  name="pricePerUnit"
+                  type="number"
+                  step="0.01"
                   className="w-full p-2 border rounded-lg"
                   required
                 />

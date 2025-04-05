@@ -23,7 +23,6 @@ import AddPatientModal from "./AddPatientModal";
 import AddPrescriptionModal from "./AddPrescriptionModal";
 import AddStaffModal from "./AddStaffModal";
 import AddStockItemModal from "./AddStockItemModal";
-import AddFinancialRecordModal from "./AddFinancialRecordModal";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { SearchContext } from "./SearchContext";
 import { toast } from "sonner";
@@ -290,8 +289,12 @@ export default function DashboardLayout({
   }, [userRole]);
 
   const currentPageTitle = useMemo(() => {
+    if (pathname === "/appointments/schedule") {
+      return "Schedule Appointments";
+    }
+
     const currentRoute = navigationItems.find((item) => item.path === pathname);
-    return currentRoute?.label || "Pharma";
+    return currentRoute?.label || "";
   }, [pathname, navigationItems]);
 
   if (isLoading) {
@@ -318,7 +321,7 @@ export default function DashboardLayout({
         )}
 
         <main className="flex-1 w-full xl:ml-72">
-          <header className="bg-gray-100 shadow-md sticky top-0 z-10">
+          <header className="bg-white backdrop-blur-sm border-b sticky top-0 z-10">
             {/* Main Header Row */}
             <div className="flex items-center justify-between px-4 py-4">
               <div className="flex items-center space-x-4">
@@ -341,7 +344,7 @@ export default function DashboardLayout({
                     />
                   </svg>
                 </button>
-                <h2 className="text-xl font-semibold text-gray-800">
+                <h2 className="text-xl text-gray-800">
                   {currentPageTitle || ""}
                 </h2>
               </div>
@@ -366,7 +369,7 @@ export default function DashboardLayout({
                     onClick={() => setShowNotifications(!showNotifications)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className=" relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                    className=" relative w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-200"
                   >
                     <AiOutlineBell className="w-5 h-5 text-gray-600" />
                     {unreadCount > 0 && (
@@ -380,7 +383,7 @@ export default function DashboardLayout({
                     whileHover={{ scale: 1.05 }}
                     onClick={handleSettingsRoute}
                     whileTap={{ scale: 0.95 }}
-                    className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                    className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-200"
                   >
                     <AiOutlineSetting className="w-5 h-5 text-gray-600" />
                   </motion.button>
@@ -389,7 +392,7 @@ export default function DashboardLayout({
                     className="flex items-center space-x-2 bg-blue-600 text-white rounded-lg px-4 py-2 cursor-pointer"
                   >
                     <AiOutlineUser className="w-5 h-5" />
-                    <span className="font-medium">{firstName}</span>
+                    <span className="font-semibold">{firstName}</span>
                   </motion.div>
                 </div>
               </div>
@@ -447,11 +450,11 @@ export default function DashboardLayout({
                     onClick={() => setShowNotifications(!showNotifications)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                    className="relative w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-200"
                   >
                     <AiOutlineBell className="w-5 h-5 text-gray-600" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-sm">
                         {unreadCount}
                       </span>
                     )}
@@ -485,7 +488,7 @@ export default function DashboardLayout({
             </div>
           </header>
 
-          <div className="p-4 sm:p-6 w-full">{children}</div>
+          <div className="w-full">{children}</div>
           {activeModal === "patient" && (
             <AddPatientModal
               isOpen={true}
@@ -514,14 +517,6 @@ export default function DashboardLayout({
               open={true}
               onClose={() => setActiveModal(null)}
               onSuccess={(data) => handleModalSuccess(data, "prescription")}
-            />
-          )}
-
-          {activeModal === "finances" && (
-            <AddFinancialRecordModal
-              isOpen={true}
-              onClose={() => setActiveModal(null)}
-              onSuccess={(data) => handleModalSuccess(data, "finances")}
             />
           )}
 

@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const PatientsSkeleton = () => (
   <div className="w-full min-h-screen">
     <div className="w-full container mx-auto px-4 py-8 max-w-7xl">
-      <div className="w-full bg-gray-200 rounded-xl shadow-sm p-6">
+      <div className="w-full bg-gray-100 rounded-xl shadow-sm p-6">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <div>
@@ -106,10 +106,10 @@ export default function PatientsPage() {
   return (
     <div className="w-full min-h-screen ">
       <div className="w-fullcontainer mx-auto px-4 py-8 max-w-7xl">
-        <div className=" w-full bg-gray-200 rounded-xl shadow-sm p-6 mb-8">
+        <div className=" w-full rounded-xl shadow-sm p-6 mb-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
                 Patient Management
               </h1>
               <p className="text-gray-600">
