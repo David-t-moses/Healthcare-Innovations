@@ -1,5 +1,7 @@
+import { Metadata } from "next";
+
 export const metadata: Metadata = {
-  title: "Schedule Appointments - Pharma Innovations",
+  title: "Schedule Patient Appointments - Pharma Innovations",
   description:
     "Streamline your healthcare operations with our powerful CRM app. Features include real-time appointment scheduling, patient and inventory management, notifications, and easy billing. Focus on patient care today!",
   icons: {

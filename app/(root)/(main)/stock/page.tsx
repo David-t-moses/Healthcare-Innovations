@@ -13,7 +13,7 @@ import {
   StockPageSkeleton,
   StockItemCardSkeletons,
   VendorCardSkeletons,
-} from "@/components/skeletons";
+} from "@/components/Skeletons";
 import { useFilteredData } from "@/lib/hooks/useFilteredData";
 import { getVendorMetrics } from "@/lib/helpers";
 import {
