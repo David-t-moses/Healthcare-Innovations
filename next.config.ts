@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+
+  exportPathMap: async function () {
+    return {
+      "/": { page: "/" },
+      "/patients": { page: "/patients", dynamic: true },
+    };
+  },
 };
 
 export default nextConfig;
