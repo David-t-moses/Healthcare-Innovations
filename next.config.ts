@@ -1,17 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "server",
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
-  },
-
-  exportPathMap: async function () {
-    return {
-      "/patients": { page: "/patients", dynamic: true },
-    };
   },
 };
 
