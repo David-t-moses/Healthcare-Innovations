@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
 
   exportPathMap: async function () {
     return {
-      "/": { page: "/" },
       "/patients": { page: "/patients", dynamic: true },
     };
   },
