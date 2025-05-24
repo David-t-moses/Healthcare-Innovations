@@ -1,6 +1,8 @@
 import AppointmentScheduler from "@/components/AppointmentScheduler";
 import { getCurrentUser } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function SchedulePage({
   searchParams,
 }: {
