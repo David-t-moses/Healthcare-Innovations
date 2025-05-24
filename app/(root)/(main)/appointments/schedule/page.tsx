@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Mail, Phone } from "lucide-react";
 import AddPatientModal from "@/components/AddPatientModal";
 
+export const dynamic = "force-dynamic";
+
 const ScheduleAppointmentSkeleton = () => (
   <div className="container mx-auto py-8 px-4">
     <div className="max-w-6xl mx-auto">
@@ -48,8 +50,6 @@ const ScheduleAppointmentSkeleton = () => (
     </div>
   </div>
 );
-
-export const dynamic = "force-dynamic";
 
 export default function ScheduleAppointmentPage() {
   const [selectedPatient, setSelectedPatient] = useState(null);
