@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { confirmOrder } from "@/lib/actions/stock.actions";
 
+export const dynamic = "force-dynamic";
+
 export default function ConfirmOrderPage() {
   const [status, setStatus] = useState<"processing" | "success" | "error">(
     "processing"

@@ -8,6 +8,8 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { BsCheckCircleFill } from "react-icons/bs";
 import { BiErrorCircle } from "react-icons/bi";
 
+export const dynamic = "force-dynamic";
+
 export default function VerifyEmail() {
   const searchParams = useSearchParams();
   const router = useRouter();
