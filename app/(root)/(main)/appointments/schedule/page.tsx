@@ -49,6 +49,8 @@ const ScheduleAppointmentSkeleton = () => (
   </div>
 );
 
+export const dynamic = "force-dynamic";
+
 export default function ScheduleAppointmentPage() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [patients, setPatients] = useState([]);
