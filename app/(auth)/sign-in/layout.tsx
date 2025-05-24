@@ -15,7 +15,7 @@ export default function SignInLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white p-4">
+    <div className="">
       {children}
     </div>
   );
