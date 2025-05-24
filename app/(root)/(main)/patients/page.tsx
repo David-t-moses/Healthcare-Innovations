@@ -10,6 +10,8 @@ import { Plus, Layout, Grid } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
+export const dynamic = "force-dynamic";
+
 const PatientsSkeleton = () => (
   <div className="w-full min-h-screen">
     <div className="w-full container mx-auto px-4 py-8 max-w-7xl">
