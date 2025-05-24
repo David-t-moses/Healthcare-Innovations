@@ -14,6 +14,8 @@ import Button from "@/components/Button";
 import { getCurrentUser } from "@/lib/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
+export const dynamic = "force-dynamic";
+
 const SettingsPageSkeleton = () => (
   <div className="max-w-7xl mx-auto p-6">
     {/* Header */}
