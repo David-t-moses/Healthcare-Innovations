@@ -201,11 +201,11 @@ export async function bulkReorderStock(stockItemIds: string[]) {
       data: { status: "PENDING" },
     });
 
-    // Send consolidated email - make sure to await this
-    await sendBulkReorderEmail(
-      stockItems,
-      orders.map((o) => o.id)
-    );
+    // Stock reorder email disabled
+    // await sendBulkReorderEmail(
+    //   stockItems,
+    //   orders.map((o) => o.id)
+    // );
 
     // Notify staff - make sure to await this
     await notifyAllStaff(

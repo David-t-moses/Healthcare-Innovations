@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { cookies } from "next/headers";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+
 import { hash, compare } from "bcryptjs";
 import { cache } from "react";
 
@@ -44,13 +44,7 @@ export async function updateProfile(data: ProfileUpdateData) {
   }
 
   try {
-    const supabase = createServerComponentClient({ cookies });
-
-    // Update Supabase auth
-    await supabase.auth.updateUser({
-      email: data.email,
-      data: { full_name: data.fullName },
-    });
+    // Removed Supabase auth update
 
     // Update database
     const updatedUser = await prisma.user.update({

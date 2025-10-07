@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+// Removed // Removed Supabase usage
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,51 +21,19 @@ export default function PatientGrid({ onDeletePatient }) {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
-  const supabase = createClientComponentClient();
+  // Removed // Removed Supabase usage
   const router = useRouter();
 
   useEffect(() => {
     const fetchPatients = async () => {
-      const { data, error } = await supabase
-        .from("Patient")
-        .select("*")
-        .order("createdAt", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching patients:", error);
-        return;
-      }
-      setPatients(data || []);
+      // Mock data for now
+      const data: Patient[] = [];
+      setPatients(data);
       setIsLoading(false);
     };
 
     fetchPatients();
-
-    const channel = supabase
-      .channel("patients-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "Patient" },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            setPatients((curr) => [payload.new as Patient, ...curr]);
-          } else if (payload.eventType === "DELETE") {
-            setPatients((curr) => curr.filter((p) => p.id !== payload.old.id));
-          } else if (payload.eventType === "UPDATE") {
-            setPatients((curr) =>
-              curr.map((p) =>
-                p.id === payload.new.id ? (payload.new as Patient) : p
-              )
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [patients]);
+  }, []);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

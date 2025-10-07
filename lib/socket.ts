@@ -4,50 +4,46 @@ declare global {
   var io: Server | undefined;
 }
 
-export function initSocket(server: any) {
-  if (!global.io) {
-    global.io = new Server(server, {
-      cors: {
-        origin: process.env.NEXT_PUBLIC_APP_URL,
-        methods: ["GET", "POST"],
-      },
-      pingTimeout: 60000,
-      pingInterval: 25000,
-    });
-
-    global.io.on("connection", (socket) => {
-      console.log("New client connected");
-
-      socket.on("join-user-room", (userId) => {
-        socket.join(`user-${userId}`);
-        console.log(`User ${userId} joined their room`);
-      });
-
-      socket.on("disconnect", () => {
-        console.log("Client disconnected");
-      });
-    });
-  }
-
-  return global.io;
-}
-
 export function getIO() {
   if (!global.io) {
-    throw new Error("Socket.io not initialized");
+    console.warn("Socket.io not initialized - notifications will not work in real-time");
+    return null;
   }
   return global.io;
 }
 
 export function emitNotification(userId: string, notification: any) {
-  getIO().to(`user-${userId}`).emit("new-notification", notification);
-  console.log(`Emitting notification to user ${userId}:`, notification);
+  const io = getIO();
+  if (io) {
+    io.to(`user-${userId}`).emit("new-notification", notification);
+    console.log(`Emitting notification to user ${userId}:`, notification);
+  }
 }
 
 export function emitNotificationRead(userId: string, notificationId: string) {
-  getIO().to(`user-${userId}`).emit("notification-read", { notificationId });
+  const io = getIO();
+  if (io) {
+    io.to(`user-${userId}`).emit("notification-read", { notificationId });
+  }
 }
 
 export function emitAllNotificationsRead(userId: string) {
-  getIO().to(`user-${userId}`).emit("all-notifications-read", {});
+  const io = getIO();
+  if (io) {
+    io.to(`user-${userId}`).emit("all-notifications-read", {});
+  }
+}
+
+export function emitNotificationDeleted(userId: string, notificationId: string) {
+  const io = getIO();
+  if (io) {
+    io.to(`user-${userId}`).emit("notification-deleted", notificationId);
+  }
+}
+
+export function emitNotificationsCleared(userId: string) {
+  const io = getIO();
+  if (io) {
+    io.to(`user-${userId}`).emit("notifications-cleared", userId);
+  }
 }

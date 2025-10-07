@@ -1,12 +1,11 @@
 "use client";
 
-import { startTransition, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DecorativeSection } from "./DecorativeSection";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { signIn } from "@/lib/actions/user.actions";
+import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
 interface LoginData {
@@ -16,7 +15,6 @@ interface LoginData {
 
 const Signin = () => {
   const router = useRouter();
-  const supabase = createClientComponentClient();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<LoginData>({
     email: "",
@@ -33,13 +31,17 @@ const Signin = () => {
     setIsLoading(true);
 
     try {
-      const result = await signIn(formData);
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
 
-      if (result.success) {
-        router.push(result.redirect || "/dashboard");
+      if (result?.ok) {
+        router.push("/dashboard");
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to sign in");
+        toast.error("Invalid credentials");
         setIsLoading(false);
       }
     } catch (error) {

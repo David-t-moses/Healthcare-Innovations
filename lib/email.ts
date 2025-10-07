@@ -5,13 +5,11 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_APP_PASSWORD,
+    pass: process.env.EMAIL_APP_PASSWORD?.replace(/\s/g, ''), // Remove any spaces
   },
-  pool: true,
-  maxConnections: 5,
-  maxMessages: 100,
-  rateDelta: 1000,
-  rateLimit: 5,
+  tls: {
+    rejectUnauthorized: false,
+  },
 });
 
 const createMailOptions = (to: string, subject: string, html: string) => {

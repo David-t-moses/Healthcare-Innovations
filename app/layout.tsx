@@ -1,10 +1,12 @@
 import { Inter } from "next/font/google";
 import type { Metadata } from "next";
 import "@/globals.css";
-import { SupabaseProvider } from "@/components/SupabaseProvider";
+import { Suspense } from "react";
+import LoadingSpinner from "@/components/LoadingSpinner";
+
 import { Toaster } from "sonner";
 import { NotificationProvider } from "@/components/NotificationContext";
-import { getCurrentUser } from "@/lib/auth";
+import Providers from "@/components/Providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,26 +23,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let user;
-  try {
-    user = await getCurrentUser();
-  } catch (error) {
-    console.error("Failed to fetch user:", error);
-  }
-
   return (
     <html lang="en" className={inter.variable}>
       <body className="antialiased bg-gray-100 w-full">
-        <SupabaseProvider>
-          <NotificationProvider userId={user?.id}>
-            {children}
-          </NotificationProvider>
-        </SupabaseProvider>
+        <Providers>
+          <Suspense fallback={<LoadingSpinner />}>
+            <NotificationProvider>
+              {children}
+            </NotificationProvider>
+          </Suspense>
+        </Providers>
         <Toaster />
       </body>
     </html>

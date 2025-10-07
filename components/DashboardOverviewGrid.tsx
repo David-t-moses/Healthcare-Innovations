@@ -298,7 +298,11 @@ const DashboardOverviewGrid: React.FC = () => {
           : [],
       });
     } catch (error) {
-      console.error("Error loading finances:", error);
+      if (error && typeof error === 'object' && 'success' in error) {
+        console.error("Error loading finances:", error);
+      } else {
+        console.error("Error loading finances:", error?.message || 'Unknown error');
+      }
     } finally {
       setFinancesLoading(false);
     }
@@ -467,23 +471,23 @@ const DashboardOverviewGrid: React.FC = () => {
 
       {/* Financial Summary */}
       <motion.div variants={itemVariants} className="col-span-1 md:col-span-2">
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 bg-white">
+        <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300 bg-blue-600">
           <CardHeader className="pb-1 pt-3 px-3">
-            <CardTitle className="text-sm font-medium text-gray-800 flex items-center justify-between">
+            <CardTitle className="text-sm font-medium text-white flex items-center justify-between">
               <div className="flex items-center">
-                <CreditCard className="h-4 w-4 mr-2 text-blue-600" />
+                <CreditCard className="h-4 w-4 mr-2 text-white" />
                 Financial Summary
               </div>
               <div className="flex items-center space-x-2 text-xs">
                 <Badge
                   variant="outline"
-                  className="bg-blue-50 text-blue-600 border-blue-100"
+                  className="bg-transparent text-white border-transparent"
                 >
                   Revenue: {formatCurrency(financesData.revenue)}
                 </Badge>
                 <Badge
                   variant="outline"
-                  className="bg-red-50 text-red-600 border-red-100"
+                  className="bg-transparent text-white border-transparent"
                 >
                   Expenses: {formatCurrency(financesData.expenses)}
                 </Badge>
@@ -667,47 +671,35 @@ const DashboardOverviewGrid: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 mt-2">
-                  <div className="p-2 bg-blue-50 rounded-lg text-center">
-                    <p className="text-xs text-gray-600 mb-1">Revenue</p>
+                  <div className="p-2 rounded-lg text-center">
+                    <p className="text-xs text-blue-100 mb-1">Revenue</p>
                     <div className="flex items-center justify-center">
-                      <span className="text-sm font-bold text-blue-600">
+                      <span className="text-sm font-bold text-white">
                         {formatCurrency(financesData.revenue)}
                       </span>
-                      <span className="ml-1 text-xs text-blue-600">
+                      <span className="ml-1 text-xs text-blue-100">
                         {financesData.trend > 0 ? "↑" : "↓"}
                         {Math.abs(financesData.trend)}%
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-2 bg-red-50 rounded-lg text-center">
-                    <p className="text-xs text-gray-600 mb-1">Expenses</p>
+                  <div className="p-2 rounded-lg text-center">
+                    <p className="text-xs text-blue-100 mb-1">Expenses</p>
                     <div className="flex items-center justify-center">
-                      <span className="text-sm font-bold text-red-600">
+                      <span className="text-sm font-bold text-white">
                         {formatCurrency(financesData.expenses)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-2 bg-green-50 rounded-lg text-center">
-                    <p className="text-xs text-gray-600 mb-1">Net Profit</p>
+                  <div className="p-2 rounded-lg text-center">
+                    <p className="text-xs text-blue-100 mb-1">Net Profit</p>
                     <div className="flex items-center justify-center">
-                      <span
-                        className={`text-sm font-bold ${
-                          financesData.netProfit >= 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
+                      <span className="text-sm font-bold text-white">
                         {formatCurrency(financesData.netProfit)}
                       </span>
-                      <span
-                        className={`ml-1 text-xs ${
-                          financesData.netProfit >= 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
+                      <span className="ml-1 text-xs text-blue-100">
                         {financesData.netProfit >= 0 ? (
                           <ArrowUpRight className="inline h-3 w-3" />
                         ) : (

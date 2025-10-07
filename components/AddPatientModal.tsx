@@ -2,12 +2,12 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import Button from "./Button";
+import { createPatient } from "@/lib/actions/patient.actions";
 
 interface AddPatientModalProps {
   isOpen: boolean;
@@ -42,35 +42,27 @@ export default function AddPatientModal({
     status: "active",
   });
 
-  const supabase = createClientComponentClient();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const patientData = {
-        id: crypto.randomUUID(),
         name: formData.name,
         email: formData.email || null,
         phone: formData.phone || null,
-        dateOfBirth: formData.dateOfBirth
-          ? new Date(formData.dateOfBirth).toISOString()
-          : null,
+        dateOfBirth: formData.dateOfBirth || null,
         insurance: formData.insurance || null,
         emergencyContact: formData.emergencyContact || null,
         status: formData.status,
       };
 
-      const { data, error } = await supabase
-        .from("Patient")
-        .insert([patientData])
-        .select();
+      const result = await createPatient(patientData);
 
-      if (error) throw new Error(error.message);
+      if (result.error) throw new Error(result.error);
 
       toast.success("Patient added successfully!");
-      onSuccess(data[0]);
+      onSuccess(result.patient);
 
       setFormData({
         name: "",

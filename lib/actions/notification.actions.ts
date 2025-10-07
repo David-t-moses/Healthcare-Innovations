@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { emitNotificationRead, emitAllNotificationsRead } from "../socket";
+import { emitNotificationRead, emitAllNotificationsRead, emitNotificationDeleted, emitNotificationsCleared } from "../socket";
 
 export async function getNotifications(userId: string) {
   try {
@@ -53,9 +53,18 @@ export async function markAllNotificationsAsRead(userId: string) {
 
 export async function deleteNotification(notificationId: string) {
   try {
-    await prisma.notification.delete({
+    const notification = await prisma.notification.findUnique({
       where: { id: notificationId },
     });
+    
+    if (notification) {
+      await prisma.notification.delete({
+        where: { id: notificationId },
+      });
+      
+      emitNotificationDeleted(notification.userId, notificationId);
+    }
+    
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to delete notification" };
@@ -67,6 +76,8 @@ export async function deleteAllNotifications(userId: string) {
     await prisma.notification.deleteMany({
       where: { userId },
     });
+    
+    emitNotificationsCleared(userId);
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to delete all notifications" };

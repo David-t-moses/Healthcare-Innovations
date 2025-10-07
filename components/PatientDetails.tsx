@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+// Removed // Removed Supabase usage
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,152 +17,28 @@ export default function PatientDetails({ patientId }: PatientDetailsProps) {
   const [medicalHistory, setMedicalHistory] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
   const [payments, setPayments] = useState([]);
-  const supabase = createClientComponentClient();
+  // Removed // Removed Supabase usage
 
   useEffect(() => {
     const fetchPatientData = async () => {
-      const { data: patientData } = await supabase
-        .from("Patient")
-        .select(
-          `
-    id,
-    name,
-    email,
-    phone,
-    dateOfBirth,
-    insurance,
-    emergencyContact,
-    status,
-    createdAt,
-    lastVisit,
-    medicalHistories:MedicalHistory(
-      id,
-      diagnosis,
-      notes,
-      date,
-      staffId
-    ),
-    prescriptions:Prescription(
-      id,
-      medication,
-      dosage,
-      instructions,
-      date,
-      staffId
-    ),
-    paymentHistories:PaymentHistory(
-      id,
-      amount,
-      date,
-      status,
-      paymentMethod
-    )
-  `
-        )
-        .eq("id", patientId)
-        .single();
-      setPatient(patientData);
+      // Mock patient data
+      const mockPatient = {
+        id: patientId,
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        phone: '+1234567890',
+        dateOfBirth: '1990-01-01',
+        insurance: 'Health Insurance Co.',
+        emergencyContact: 'Jane Doe - +1234567891',
+        status: 'active'
+      };
+      setPatient(mockPatient);
+      setMedicalHistory([]);
+      setPrescriptions([]);
+      setPayments([]);
     };
 
     fetchPatientData();
-
-    // Set up real-time subscriptions
-    const medicalHistorySubscription = supabase
-      .channel("medical_history_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "MedicalHistory",
-          filter: `patientId=eq.${patientId}`,
-        },
-        async () => {
-          const { data } = await supabase
-            .from("medical_history")
-            .select("*")
-            .eq("patient_id", patientId)
-            .order("date", { ascending: false });
-          setMedicalHistory(data || []);
-        }
-      )
-      .subscribe();
-
-    const prescriptionsSubscription = supabase
-      .channel("prescriptions_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "prescriptions",
-          filter: `patient_id=eq.${patientId}`,
-        },
-        async () => {
-          const { data } = await supabase
-            .from("prescriptions")
-            .select("*")
-            .eq("patient_id", patientId)
-            .order("date", { ascending: false });
-          setPrescriptions(data || []);
-        }
-      )
-      .subscribe();
-
-    const paymentsSubscription = supabase
-      .channel("payments_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "payments",
-          filter: `patient_id=eq.${patientId}`,
-        },
-        async () => {
-          const { data } = await supabase
-            .from("payments")
-            .select("*")
-            .eq("patient_id", patientId)
-            .order("date", { ascending: false });
-          setPayments(data || []);
-        }
-      )
-      .subscribe();
-
-    // Initial data fetch
-    const fetchInitialData = async () => {
-      const [historyRes, prescriptionsRes, paymentsRes] = await Promise.all([
-        supabase
-          .from("medical_history")
-          .select("*")
-          .eq("patient_id", patientId)
-          .order("date", { ascending: false }),
-        supabase
-          .from("prescriptions")
-          .select("*")
-          .eq("patient_id", patientId)
-          .order("date", { ascending: false }),
-        supabase
-          .from("payments")
-          .select("*")
-          .eq("patient_id", patientId)
-          .order("date", { ascending: false }),
-      ]);
-
-      setMedicalHistory(historyRes.data || []);
-      setPrescriptions(prescriptionsRes.data || []);
-      setPayments(paymentsRes.data || []);
-    };
-
-    fetchInitialData();
-
-    // Cleanup subscriptions
-    return () => {
-      supabase.removeChannel(medicalHistorySubscription);
-      supabase.removeChannel(prescriptionsSubscription);
-      supabase.removeChannel(paymentsSubscription);
-    };
   }, [patientId]);
 
   const EmptyState = ({ message }: { message: string }) => (

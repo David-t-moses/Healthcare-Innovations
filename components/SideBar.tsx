@@ -1,8 +1,9 @@
 "use client";
 import { signOut } from "@/lib/actions/user.actions";
+import { signOut as nextAuthSignOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { AiOutlineLogout, AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
 
@@ -28,9 +29,12 @@ const Sidebar = ({
     setLoadingPath(null);
   }, [pathname]);
 
-  const handleSignOut = () => {
+  const router = useRouter();
+  
+  const handleSignOut = async () => {
     setIsLoading(true);
-    signOut();
+    // Direct NextAuth signout with redirect
+    await nextAuthSignOut({ callbackUrl: "/sign-in" });
   };
 
   const handleNavigation = (path: string) => {

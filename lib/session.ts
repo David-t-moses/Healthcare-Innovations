@@ -10,8 +10,8 @@ export async function createSession(userId: string) {
     .setExpirationTime("24h")
     .sign(new TextEncoder().encode(getJwtSecretKey()));
 
-  const cookieStore = cookies();
-  await cookieStore.set("session", token, {
+  const cookieStore = await cookies();
+  cookieStore.set("session", token, {
     httpOnly: true,
     secure: false, // Set to false for development
     sameSite: "lax",
@@ -28,8 +28,8 @@ export async function createSession(userId: string) {
 }
 
 export async function getSession() {
-  const cookieStore = cookies();
-  const sessionCookie = await cookieStore.get("session");
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session");
   const token = sessionCookie?.value;
 
   console.log("Token exists:", !!token);
@@ -50,6 +50,6 @@ export async function getSession() {
 }
 
 export async function destroySession() {
-  const cookieStore = cookies();
-  await cookieStore.delete("session");
+  const cookieStore = await cookies();
+  cookieStore.delete("session");
 }

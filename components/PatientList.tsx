@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+// Removed // Removed Supabase usage
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -26,25 +26,22 @@ export default function PatientList({ onDeletePatient }) {
     isOpen: false,
     patientToDelete: null,
   });
-  const supabase = createClientComponentClient();
+  // Removed // Removed Supabase usage
   const router = useRouter();
 
   const fetchPatients = async () => {
     try {
-      let query = supabase.from("Patient").select("*");
+      // TODO: Replace with real data fetch from your backend
+      const results = [] as any[];
+      const filtered = searchQuery
+        ? results.filter((p) =>
+            [p.name, p.email, p.phone].some((field) =>
+              String(field || "").toLowerCase().includes(searchQuery.toLowerCase())
+            )
+          )
+        : results;
 
-      if (searchQuery) {
-        query = query.or(
-          `name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`
-        );
-      }
-
-      const { data, error } = await query.order("createdAt", {
-        ascending: false,
-      });
-
-      if (error) throw error;
-      setPatients(data || []);
+      setPatients(filtered);
     } catch (error) {
       toast.error("Failed to load patients");
     } finally {
@@ -54,7 +51,7 @@ export default function PatientList({ onDeletePatient }) {
 
   useEffect(() => {
     fetchPatients();
-  }, [searchQuery, patients]);
+  }, [searchQuery]);
 
   const handleDeleteClick = (patient) => {
     setDeleteModalState({

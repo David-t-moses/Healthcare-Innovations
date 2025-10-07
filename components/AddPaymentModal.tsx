@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
 import { createPayment, getSalesData } from "@/lib/actions/sales.actions";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-const supabase = createClientComponentClient();
+import { getCurrentUser } from "@/lib/auth";
 
 interface AddPaymentModalProps {
   isOpen: boolean;
@@ -28,10 +27,8 @@ export default function AddPaymentModal({
     const formData = new FormData(e.target);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
+      const user = await getCurrentUser();
+      const userId = user?.id;
 
       const result = await createPayment({
         patientId: formData.get("patientId") as string,

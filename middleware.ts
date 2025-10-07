@@ -1,11 +1,11 @@
+import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getSession } from "@/lib/session";
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const session = await getSession();
-  const userRole = session?.role;
+export default withAuth(
+  function middleware(req: NextRequest & { nextauth: { token: any } }) {
+    const token = req.nextauth.token;
+    const userRole = token?.role;
 
   // Check for stock confirmation/rejection with valid ID
   if (
@@ -27,37 +27,62 @@ export async function middleware(req: NextRequest) {
   ];
   const protectedRoutes = [...staffOnlyRoutes, ...patientRoutes, "/dashboard"];
 
-  // Root redirect
-  if (req.nextUrl.pathname === "/") {
-    if (session) {
+    // Root redirect
+    if (req.nextUrl.pathname === "/") {
+      if (token) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
+      return NextResponse.redirect(new URL("/sign-in", req.url));
+    }
+
+    // Auth pages protection - only redirect if user has valid NextAuth token
+    if (token && req.nextUrl.pathname.startsWith("/sign-")) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
-    return NextResponse.redirect(new URL("/sign-in", req.url));
-  }
 
-  // Auth pages protection
-  if (session && req.nextUrl.pathname.startsWith("/sign-")) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
-
-  // Protected routes authentication check
-  if (
-    !session &&
-    protectedRoutes.some((route) => req.nextUrl.pathname.startsWith(route))
-  ) {
-    const redirectUrl = new URL("/sign-in", req.url);
-    redirectUrl.searchParams.set("redirectedFrom", req.nextUrl.pathname);
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  // Role-based access control
-  if (session && userRole === "PATIENT") {
-    if (
-      staffOnlyRoutes.some((route) => req.nextUrl.pathname.startsWith(route))
-    ) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+    // Role-based access control
+    if (token && userRole === "PATIENT") {
+      if (
+        staffOnlyRoutes.some((route) => req.nextUrl.pathname.startsWith(route))
+      ) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
     }
-  }
 
-  return res;
-}
+    return NextResponse.next();
+  },
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        const { pathname } = req.nextUrl;
+        
+        // Root redirect
+        if (pathname === "/") {
+          return !!token;
+        }
+        
+        // Allow auth pages when not logged in
+        if (pathname.startsWith("/sign-")) {
+          return true;
+        }
+        
+        // Protect all other routes
+        const protectedRoutes = ["/staff", "/finances", "/settings", "/stock", "/appointments", "/prescriptions", "/medical-history", "/messages", "/dashboard"];
+        if (protectedRoutes.some(route => pathname.startsWith(route))) {
+          return !!token;
+        }
+        
+        return true;
+      },
+    },
+    pages: {
+      signIn: "/sign-in",
+    },
+  }
+);
+
+export const config = {
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
+};

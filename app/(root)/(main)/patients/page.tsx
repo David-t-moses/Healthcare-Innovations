@@ -5,10 +5,10 @@ import PatientGrid from "@/components/PatientGrid";
 import AddPatientModal from "@/components/AddPatientModal";
 import PatientAnalytics from "@/components/PatientAnalytics";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Plus, Layout, Grid } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { deletePatient } from "@/lib/actions/patient.actions";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +71,6 @@ const PatientsSkeleton = () => (
 export default function PatientsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClientComponentClient();
   const [patients, setPatients] = useState([]);
 
   useEffect(() => {
@@ -89,12 +88,9 @@ export default function PatientsPage() {
   };
 
   const handleDeletePatient = async (patientId: string) => {
-    const { error } = await supabase
-      .from("Patient")
-      .delete()
-      .eq("id", patientId);
+    const result = await deletePatient(patientId);
 
-    if (error) {
+    if (result.error) {
       toast.error("Failed to delete patient, Please try again.");
     } else {
       toast.success("Patient deleted successfully");

@@ -3,7 +3,7 @@
 import { hash, compare } from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { createSession, destroySession } from "@/lib/session";
+import { signIn as nextAuthSignIn } from "next-auth/react";
 import { sendVerificationEmail } from "@/lib/email";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { cache } from "react";
@@ -85,15 +85,16 @@ export async function signUp(formData: {
       });
     }
 
-    await sendVerificationEmail(
-      formData.email,
-      formData.fullName,
-      verificationToken
-    );
+    // Auto-verify user (email verification disabled)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerified: true, verificationToken: null },
+    });
 
     return {
       success: true,
-      message: "Please check your email to verify your account",
+      message: "Account created successfully!",
+      user: { email: user.email, password: formData.password },
     };
   } catch (error) {
     return {
@@ -131,19 +132,28 @@ export async function verifyEmail(token: string) {
 
 export async function signIn(formData: { email: string; password: string }) {
   try {
-    const user = await findUserByEmail(formData.email);
+    const user = await prisma.user.findUnique({
+      where: { email: formData.email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        role: true,
+        fullName: true,
+        emailVerified: true,
+      },
+    });
     if (!user) return { error: "Invalid credentials" };
 
     const isValidPassword = await compare(formData.password, user.password);
     if (!isValidPassword) return { error: "Invalid credentials" };
 
-    await createSession(user.id);
+    // Email verification disabled - skip check
 
     const { password: _, ...userWithoutPassword } = user;
     return {
       success: true,
       user: userWithoutPassword,
-      redirect: "/dashboard",
     };
   } catch (error) {
     console.error("Sign in error:", error);
@@ -152,8 +162,7 @@ export async function signIn(formData: { email: string; password: string }) {
 }
 
 export async function signOut() {
-  await destroySession();
-  redirect("/sign-in");
+  redirect("/api/auth/signout?callbackUrl=/sign-in");
 }
 
 export async function requestPasswordReset(email: string) {
@@ -173,9 +182,10 @@ export async function requestPasswordReset(email: string) {
       data: { resetPasswordToken: resetToken },
     });
 
-    await sendPasswordResetEmail(email, user.fullName, resetToken);
+    // Password reset email disabled
+    // await sendPasswordResetEmail(email, user.fullName, resetToken);
 
-    return { success: true };
+    return { success: true, message: "Password reset functionality is currently disabled" };
   } catch (error) {
     return { error: "Failed to process request" };
   }

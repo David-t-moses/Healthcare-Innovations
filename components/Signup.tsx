@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { SignupForm } from "@/components/SignupForm";
 import { DecorativeSection } from "@/components/DecorativeSection";
 import { signUp } from "@/lib/actions/user.actions";
+import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
 interface FormData {
@@ -51,7 +52,15 @@ export default function SignUp() {
       const result = await signUp(formData);
       if (result.success) {
         toast.success(result.message);
-        // window.location.href = "/dashboard";
+        // Auto-login with NextAuth after successful signup
+        const signInResult = await signIn("credentials", {
+          email: formData.email,
+          password: formData.password,
+          redirect: false,
+        });
+        if (signInResult?.ok) {
+          window.location.href = "/dashboard";
+        }
       } else if (result.error) {
         toast.error(result.error);
         console.error(result.error);

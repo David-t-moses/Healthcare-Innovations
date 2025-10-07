@@ -13,7 +13,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+
 
 ChartJS.register(
   CategoryScale,
@@ -38,20 +38,20 @@ export default function FinancialWidget() {
   const [financialData, setFinancialData] = useState<PaymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClientComponentClient();
+  
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchFinancialData = async () => {
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
-          .from("PaymentHistory")
-          .select("*")
-          .order("date", { ascending: true });
-
-        if (error) throw new Error(error.message);
-        setFinancialData(data || []);
+        // Mock data for now
+        const mockData: PaymentRecord[] = [
+          { id: '1', amount: 1000, date: '2024-01-01', status: 'completed', patientId: '1', userId: '1' },
+          { id: '2', amount: 1500, date: '2024-02-01', status: 'completed', patientId: '2', userId: '1' },
+          { id: '3', amount: 2000, date: '2024-03-01', status: 'completed', patientId: '3', userId: '1' },
+        ];
+        setFinancialData(mockData);
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch data");
@@ -60,22 +60,7 @@ export default function FinancialWidget() {
       }
     };
 
-    const channel = supabase
-      .channel("payment_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "PaymentHistory" },
-        (payload) => {
-          fetchFinancialData();
-        }
-      )
-      .subscribe();
-
     fetchFinancialData();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   if (isLoading) {

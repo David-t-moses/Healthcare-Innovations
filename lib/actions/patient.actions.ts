@@ -3,6 +3,39 @@
 import prisma from "@/lib/prisma";
 import { cache } from "react";
 
+export async function createPatient(data: {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  dateOfBirth: string | null;
+  insurance: string | null;
+  emergencyContact: string | null;
+  status: string;
+}) {
+  try {
+    const patient = await prisma.patient.create({
+      data: {
+        ...data,
+        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+      },
+    });
+    return { success: true, patient };
+  } catch (error) {
+    return { error: "Failed to create patient" };
+  }
+}
+
+export async function deletePatient(id: string) {
+  try {
+    await prisma.patient.delete({
+      where: { id },
+    });
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to delete patient" };
+  }
+}
+
 export const getPatientAnalytics = cache(async () => {
   try {
     // Get the current date

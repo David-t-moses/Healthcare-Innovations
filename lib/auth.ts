@@ -1,30 +1,23 @@
 "use server";
 
-import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
-import { getSession } from "@/lib/session";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function getCurrentUser() {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("session");
-  console.log("Session cookie exists:", !!sessionCookie);
-
   try {
-    const session = await getSession();
-    console.log("Session after getSession:", session);
+    const session = await getServerSession(authOptions as any);
 
-    if (!session?.userId) {
-      console.log("No userId in session");
+    if (!session?.user?.id) {
       return null;
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: session.userId },
+      where: { id: session.user.id },
       select: {
         id: true,
         email: true,
         fullName: true,
-        password: true,
         role: true,
         createdAt: true,
         updatedAt: true,
@@ -32,7 +25,6 @@ export async function getCurrentUser() {
     });
 
     if (!user) {
-      cookieStore.delete("session");
       return null;
     }
 
