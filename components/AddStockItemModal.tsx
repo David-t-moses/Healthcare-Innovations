@@ -2,8 +2,6 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
-import { createStockItem, getStockItems } from "@/lib/actions/stock.actions";
-import { getVendors } from "@/lib/actions/vendor.actions";
 
 export default function AddStockItemModal({ isOpen, onClose, onSuccess }) {
   const [vendors, setVendors] = useState([]);
@@ -22,7 +20,7 @@ export default function AddStockItemModal({ isOpen, onClose, onSuccess }) {
     setIsSubmitting(true);
     const formData = new FormData(e.target);
 
-    const newItem = await createStockItem({
+    const payload = {
       name: formData.get("name") as string,
       quantity: Number(formData.get("quantity")),
       minimumQuantity: Number(formData.get("minimumQuantity")),
@@ -30,19 +28,31 @@ export default function AddStockItemModal({ isOpen, onClose, onSuccess }) {
       pricePerUnit: Number(formData.get("pricePerUnit")),
       vendorId: formData.get("vendorId") as string,
       status: "IN_STOCK",
-    });
+    };
 
-    if (onSuccess) onSuccess(newItem);
+    const res = await fetch("/api/stock-items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || "Failed to create item");
+
+    if (onSuccess) onSuccess(json.data);
     setIsSubmitting(false);
     onClose();
   };
 
   const fetchData = async () => {
     try {
-      const vendorsData = await getVendors();
-      const stockData = await getStockItems();
-      setVendors(vendorsData);
-      setStockItems(stockData);
+      const [vendorsRes, stocksRes] = await Promise.all([
+        fetch("/api/vendors"),
+        fetch("/api/stock-items"),
+      ]);
+      const vendorsJson = await vendorsRes.json();
+      const stocksJson = await stocksRes.json();
+      setVendors(vendorsJson?.data || []);
+      setStockItems(stocksJson?.data || []);
     } finally {
       setIsLoading(false);
     }

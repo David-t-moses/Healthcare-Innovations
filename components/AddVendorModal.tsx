@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { createVendor } from "@/lib/actions/vendor.actions";
 
 export default function AddVendorModal({ isOpen, onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -12,12 +11,20 @@ export default function AddVendorModal({ isOpen, onClose }) {
     setIsSubmitting(true);
     const formData = new FormData(e.target);
 
-    await createVendor({
+    const payload = {
       name: formData.get("name") as string,
       email: formData.get("email") as string,
       phone: formData.get("phone") as string,
       address: formData.get("address") as string,
+    };
+
+    const res = await fetch("/api/vendors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || "Failed to create vendor");
     setIsSubmitting(false);
     onClose();
   };

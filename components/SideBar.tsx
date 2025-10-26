@@ -95,7 +95,8 @@ const Sidebar = ({
                   className={`px-4 py-3 rounded-lg cursor-pointer transition-all group ${
                     pathname === item.path
                       ? "bg-blue-600 text-white"
-                      : "hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white focus:opacity-75"
+                      : ""
+                      // : "focus:bg-blue-600 focus:text-white focus:opacity-75"
                   } ${loadingPath === item.path ? "opacity-50" : ""}`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
